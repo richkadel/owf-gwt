@@ -1,0 +1,12 @@
+
+
+Release 0.0.1
+
+* First Release:
+
+  - This library was created to make it easier to integrate OWF into a Java GWT application
+    containing several interactive "widgets". It depends on the recently created
+    JsFunction.GWT project, also on GitHub. 
+  
+  
+  

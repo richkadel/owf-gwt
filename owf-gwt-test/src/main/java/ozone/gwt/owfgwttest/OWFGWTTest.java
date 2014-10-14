@@ -1,11 +1,12 @@
 package ozone.gwt.owfgwttest;
 
-import jsfunction.JsFunction;
-import jsfunction.NoArgsFunction;
+import jsfunction.gwt.JsFunction;
+import jsfunction.gwt.NoArgsFunction;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.JsArrayMixed;
-//import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.RootPanel;
 
 public class OWFGWTTest implements EntryPoint {
   
@@ -14,23 +15,32 @@ public class OWFGWTTest implements EntryPoint {
   @Override
   public void onModuleLoad() {
     
-    testWindowOnload(new NoArgsFunction() {
-      //TODO: Update this test from just the JsFunction test to an OWF-GWT test
+    /////////////////////////////////////
+    /***********************************/
+    /////////////////////////////////////
+    /***********************************/
+    // THIS NEEDS TO BE REPLACED WITH A TEST HARNESS FOR THE OWF LIBRARY
+    // (For now, this is being tested as part of the Harmonia SAPPHIRE development under their ONR efforts.)
+    /***********************************/
+    /////////////////////////////////////
+    /***********************************/
+    /////////////////////////////////////
+    
+    testWindowOnclick(new NoArgsFunction() {
       public void callback() {
-        log("Made it ", count++);
+        log("Made it", count++);
       }
     });
     
-    //TabPanel tabs = new TabPanel();
-    //RootPanel.get().add(tabs);
+    RootPanel.get().add(new Label("Open the browser console and click this window to see test output."));
   }
   
-  private void testWindowOnload(NoArgsFunction noArgsFunction) {
-    nativeWindowOnLoad(JsFunction.create(noArgsFunction));
+  private void testWindowOnclick(NoArgsFunction noArgsFunction) {
+    nativeWindowOnClick(JsFunction.create(noArgsFunction));
   }
 
-  private native void nativeWindowOnLoad(JsFunction callback) /*-{
-    $wnd.onload(callback);
+  private native void nativeWindowOnClick(JsFunction callback) /*-{
+    $wnd.onclick = callback
   }-*/;
 
   public void log(Object... varargs) {
@@ -38,6 +48,6 @@ public class OWFGWTTest implements EntryPoint {
   }
   
   public native void nativeLog(JsArrayMixed arguments) /*-{
-    console.log.apply(null, arguments);
+    console.log.apply(console, arguments);
   }-*/;
 }

@@ -31,4 +31,6 @@ public abstract class WidgetFramework {
   public abstract WidgetHandle createWidgetHandleInstance(WidgetContainer widgetContainer, IsWidget gwtIsWidget);
   
   public abstract WidgetHandle getWidgetHandleInstance(IsWidget gwtIsWidget);
+  
+  public abstract WidgetLogger getLogger();
 }

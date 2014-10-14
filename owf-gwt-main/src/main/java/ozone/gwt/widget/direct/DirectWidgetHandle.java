@@ -6,7 +6,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-
 import ozone.gwt.widget.Intent;
 import ozone.gwt.widget.OnReceipt;
 import ozone.gwt.widget.StringMessage;
@@ -15,13 +14,13 @@ import ozone.gwt.widget.WidgetHandle;
 import ozone.gwt.widget.WidgetProxy;
 import ozone.gwt.widget.WidgetProxyFunction;
 import ozone.gwt.widget.WidgetProxyFunctions;
-//import jsfunction.DoubleResult;
-//import jsfunction.IntResult;
-//import jsfunction.BooleanResult;
-//import jsfunction.JsResult;
-//import jsfunction.StringResult;
-import jsfunction.EventListener;
-import jsfunction.JsReturn;
+//import jsfunction.gwt.DoubleResult;
+//import jsfunction.gwt.IntResult;
+//import jsfunction.gwt.BooleanResult;
+//import jsfunction.gwt.JsResult;
+//import jsfunction.gwt.StringResult;
+import jsfunction.gwt.EventListener;
+import jsfunction.gwt.JsReturn;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;

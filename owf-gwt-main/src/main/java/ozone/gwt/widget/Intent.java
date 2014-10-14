@@ -4,8 +4,6 @@ import com.google.gwt.core.client.JavaScriptObject;
 
 public abstract class Intent<T extends JavaScriptObject> {
   
-  public static String PREFIX = "application/vnd.com.harmonia.sapphire.";
-  
   private String action;
   
   private WidgetHandle widgetHandle;

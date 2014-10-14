@@ -1,12 +1,13 @@
 package ozone.gwt.widget;
 
-import jsfunction.JsReturn;
-//import jsfunction.BooleanResult;
-//import jsfunction.DoubleResult;
-//import jsfunction.EventListener;
-//import jsfunction.IntResult;
-//import jsfunction.JsResult;
-//import jsfunction.StringResult;
+//import jsfunction.gwt.BooleanResult;
+//import jsfunction.gwt.DoubleResult;
+//import jsfunction.gwt.EventListener;
+//import jsfunction.gwt.IntResult;
+//import jsfunction.gwt.JsResult;
+//import jsfunction.gwt.StringResult;
+
+import jsfunction.gwt.JsReturn;
 
 import com.google.gwt.core.client.JavaScriptObject;
 

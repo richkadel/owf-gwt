@@ -1,14 +1,14 @@
 package ozone.gwt.widget.owf;
 
-//import jsfunction.BooleanResult;
-//import jsfunction.DoubleResult;
-//import jsfunction.IntResult;
-//import jsfunction.JsResult;
-//import jsfunction.StringResult;
+//import jsfunction.gwt.BooleanResult;
+//import jsfunction.gwt.DoubleResult;
+//import jsfunction.gwt.IntResult;
+//import jsfunction.gwt.JsResult;
+//import jsfunction.gwt.StringResult;
 import ozone.gwt.widget.WidgetProxy;
-import jsfunction.EventListener;
-import jsfunction.JsFunction;
-import jsfunction.JsReturn;
+import jsfunction.gwt.EventListener;
+import jsfunction.gwt.JsFunction;
+import jsfunction.gwt.JsReturn;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArrayMixed;

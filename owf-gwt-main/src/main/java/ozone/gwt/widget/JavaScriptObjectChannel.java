@@ -1,6 +1,6 @@
 package ozone.gwt.widget;
 
-import jsfunction.EventListener;
+import jsfunction.gwt.EventListener;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsonUtils;

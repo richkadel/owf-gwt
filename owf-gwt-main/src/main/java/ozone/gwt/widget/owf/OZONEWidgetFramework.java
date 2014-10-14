@@ -8,14 +8,16 @@ import ozone.gwt.widget.StringMessage;
 import ozone.gwt.widget.WidgetContainer;
 import ozone.gwt.widget.WidgetFramework;
 import ozone.gwt.widget.WidgetHandle;
+import ozone.gwt.widget.WidgetLogger;
 import ozone.gwt.widget.WidgetProxy;
 import ozone.gwt.widget.WidgetProxyFunction;
 import ozone.gwt.widget.WidgetProxyFunctions;
-import jsfunction.EventListener;
-import jsfunction.JsFunction;
+import jsfunction.gwt.EventListener;
+import jsfunction.gwt.JsFunction;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
+import com.google.gwt.core.client.JsArrayMixed;
 import com.google.gwt.user.client.ui.IsWidget;
 //import com.harmonia.sapphire.client.MessageHandler;
 //import com.harmonia.sapphire.client.Sapphire;
@@ -41,7 +43,7 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
   }-*/;
   
   protected OZONEWidgetFramework() {
-//    Sapphire.setMessageHandler(this);
+//    Sapphire.setMessageHandler(this); 
     widgetState = getWidgetState();
   }
 
@@ -84,20 +86,15 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
     return this;
   }
 
-//  @Override
-//  public WidgetHandle getWidgetHandleOrDummy(IsWidget gwtIsWidget) {
-//    return getWidgetHandle(gwtIsWidget);
-//  }
+  @Override
+  public WidgetLogger getLogger() {
+    return owfLogger;
+  }
   
   @Override
   public void activate() {
-//    OZONEWidgetFramework.this.nativeActivate();
     widgetState.activateWidget();
   }
-
-//  private native void nativeActivate() /*-{
-//    $wnd.OWF.widgetState.activateWidget($wnd.OWF.getWidgetGuid()); // not providing callback...not planning to use one... Is this OK?
-//  }-*/;
 
   @Override
   public void notifyWidgetReady() {
@@ -169,10 +166,9 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
 //        ]);
   }-*/;
 
-//  @Override
-//  public void message(String title, String messageText) {
-//    owfLogger.info(title+": "+messageText);
-//  }
+  public void message(String title, String messageText) {
+    owfLogger.info(title+": "+messageText);
+  }
 
   @Override
   public void publish(String channelName, String message, WidgetProxy dest) {
@@ -200,23 +196,6 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
   public native void unsubscribe(String channelName) /*-{
     $wnd.OWF.Eventing.unsubscribe(channelName);
   }-*/;
-  
-  private final static class OWFLogger extends JavaScriptObject {
-  
-    protected OWFLogger() {}
-  
-    static native OWFLogger create() /*-{
-      var logger = $wnd.Ozone.log.getDefaultLogger();
-      $wnd.OWF.Log.setEnabled(true);
-      var appender = logger.getEffectiveAppenders()[0];
-      appender.setThreshold($wnd.log4javascript.Level.INFO);
-      return logger;
-    }-*/;
-  
-    void info(String message) {
-      this.info(message);
-    }
-  }
   
   @Override
   public void startActivity(Intent<?> intent, JavaScriptObject data, final OnReceipt onReceipt) {
@@ -284,7 +263,74 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
     );
   }-*/;
   
-  public static final class IntentReceived extends JavaScriptObject {
+  private final static class OWFLogger extends JavaScriptObject implements WidgetLogger {
+  
+    protected OWFLogger() {}
+  
+    static native OWFLogger create() /*-{
+      var logger = $wnd.Ozone.log.getDefaultLogger();
+      $wnd.OWF.Log.setEnabled(true);
+      var appender = logger.getEffectiveAppenders()[0];
+      appender.setThreshold($wnd.log4javascript.Level.INFO);
+      return logger;
+    }-*/;
+  
+    @Override
+    public void trace(Object... messages) {
+      trace(JsFunction.varArgsToMixedArray(messages));
+    }
+
+    public native void trace(JsArrayMixed messages) /*-{
+      this.trace.apply(null, messages);
+    }-*/;
+
+    @Override
+    public void debug(Object... messages) {
+      debug(JsFunction.varArgsToMixedArray(messages));
+    }
+
+    public native void debug(JsArrayMixed messages) /*-{
+      this.debug.apply(null, messages);
+    }-*/;
+
+    @Override
+    public void info(Object... messages) {
+      info(JsFunction.varArgsToMixedArray(messages));
+    }
+
+    public native void info(JsArrayMixed messages) /*-{
+      this.info.apply(null, messages);
+    }-*/;
+
+    @Override
+    public void warn(Object... messages) {
+      warn(JsFunction.varArgsToMixedArray(messages));
+    }
+
+    public native void warn(JsArrayMixed messages) /*-{
+      this.warn.apply(null, messages);
+    }-*/;
+
+    @Override
+    public void error(Object... messages) {
+      error(JsFunction.varArgsToMixedArray(messages));
+    }
+
+    public native void error(JsArrayMixed messages) /*-{
+      this.error.apply(null, messages);
+    }-*/;
+
+    @Override
+    public void fatal(Object... messages) {
+      fatal(JsFunction.varArgsToMixedArray(messages));
+    }
+    
+    public native void fatal(JsArrayMixed messages) /*-{
+      this.fatal.apply(null, messages);
+    }-*/;
+  }
+
+  private static final class IntentReceived extends JavaScriptObject {
 
     protected IntentReceived() {}
     

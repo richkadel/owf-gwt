@@ -5,6 +5,7 @@
 -->
 <!DOCTYPE module PUBLIC "-//Google Inc.//DTD Google Web Toolkit 2.6.0//EN"
   "http://google-web-toolkit.googlecode.com/svn/tags/2.6.0/distro-source/core/src/gwt-module.dtd">
-<module>
-  <source path='ozone'/>
+<module rename-to="ozone">
+  <source path='gwt'/>
+  <inherits name='jsfunction.jsfunction' />
 </module>

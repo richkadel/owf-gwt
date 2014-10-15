@@ -7,8 +7,13 @@ public abstract class EventingChannel {
   private String channelName;
   
   protected EventingChannel(WidgetHandle widgetHandle) {
+    Class<?> subclass = getClass();
+    while (subclass.getName().indexOf('$') >= 0) { 
+      subclass = subclass.getSuperclass();
+    }
+    channelName = subclass.getName();
+    
     this.widgetHandle = widgetHandle;
-    channelName = getClass().getName();
   }
   
   protected WidgetHandle getWidgetHandle() {

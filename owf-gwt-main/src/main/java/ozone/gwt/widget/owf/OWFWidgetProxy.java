@@ -67,7 +67,7 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
   }
   
   private static native void getWidgetProxy(String widgetId, JsFunction readyCallback) /*-{
-    $wnd.OWF.RPC.getWidgetProxy(id, readyCallback);
+    $wnd.OWF.RPC.getWidgetProxy(widgetId, readyCallback);
   }-*/;
   
 //  private void callWithResult(String methodName, JsReturn resultCallback, Object[] functionArgs) {

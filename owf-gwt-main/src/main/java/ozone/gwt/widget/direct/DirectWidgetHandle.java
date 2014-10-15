@@ -22,6 +22,7 @@ import ozone.gwt.widget.WidgetProxyFunctions;
 import jsfunction.gwt.EventListener;
 import jsfunction.gwt.JsReturn;
 import jsfunction.gwt.NoArgsFunction;
+import jsfunction.gwt.VarArgsFunction;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;

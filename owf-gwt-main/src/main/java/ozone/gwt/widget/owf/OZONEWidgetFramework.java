@@ -15,6 +15,7 @@ import ozone.gwt.widget.WidgetProxyFunctions;
 import jsfunction.gwt.EventListener;
 import jsfunction.gwt.JsFunction;
 import jsfunction.gwt.NoArgsFunction;
+import jsfunction.gwt.VarArgsFunction;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
@@ -180,16 +181,37 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
   }
   
   public native void publish(String channelName, String message, String destWidgetId) /*-{
-    $wnd.OWF.Eventing.publish(channelName, message, destWidgetId);
+    if (destWidgetId) {
+      $wnd.OWF.Eventing.publish(channelName, message, destWidgetId);
+    } else {
+      $wnd.OWF.Eventing.publish(channelName, message);
+    }
   }-*/;
 
   @Override
-  public void subscribe(String channelName, EventListener<StringMessage> handler) {
-    subscribe(channelName, JsFunction.create(handler));
+  public void subscribe(String channelName, final EventListener<StringMessage> handler) {
+    subscribe(
+      channelName, 
+      JsFunction.create(new VarArgsFunction() {
+        public void callback(final JsArrayMixed args) {
+          String senderWidgetId = args.getString(0);
+          OWFWidgetProxy.getWidgetProxy(senderWidgetId, new EventListener<WidgetProxy>() {
+            public void callback(final WidgetProxy sender) {
+              sender.onReady(new NoArgsFunction() {
+                public void callback() {
+                  String message = args.getString(1);
+                  handler.callback(new StringMessage(sender, message)); // ignore third parameter, channel name
+                }
+              });
+            }
+          });
+        }
+      })
+    );
   }
 
   private native void subscribe(String channelName, JsFunction handler) /*-{
-    $wnd.OWF.Eventing.publish(channelName, handler);
+    $wnd.OWF.Eventing.subscribe(channelName, handler);
   }-*/;
 
   @Override

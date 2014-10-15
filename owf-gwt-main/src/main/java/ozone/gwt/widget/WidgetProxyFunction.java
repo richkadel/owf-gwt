@@ -1,10 +1,11 @@
 package ozone.gwt.widget;
 
+import jsfunction.gwt.JsError;
 import jsfunction.gwt.JsFunction;
 import jsfunction.gwt.JsReturn;
 import jsfunction.gwt.NoArgsFunction;
 import jsfunction.gwt.NoArgsFunctionReturn;
-import jsfunction.gwt.ReturnValue;
+import jsfunction.gwt.JsReturnValue;
 import jsfunction.gwt.VarArgsFunction;
 import jsfunction.gwt.VarArgsFunctionReturn;
 
@@ -50,16 +51,20 @@ public final class WidgetProxyFunction extends JavaScriptObject {
     nativeCall(JsFunction.varArgsToMixedArray(functionArgs));
   }
 
-  @SuppressWarnings("unchecked")
-  public <T> void call(JsReturn<T> resultCallback, Object[] functionArgs) {
-    resultCallback.onReturn((ReturnValue<T>) nativeCallWithReturn(JsFunction.varArgsToMixedArray(functionArgs)));
+  public <T extends JavaScriptObject> void call(JsReturn<T> resultCallback, Object[] functionArgs) {
+    try {
+      JsReturnValue<T> returnValue = nativeCallWithReturn(JsFunction.varArgsToMixedArray(functionArgs));
+      resultCallback.onReturn(returnValue);
+    } catch (Throwable t) {
+      resultCallback.onError(JsError.create(t));
+    }
   }
 
   private native void nativeCall(JsArrayMixed mixedArray) /*-{
     this.fn.apply(null, mixedArray);
   }-*/;
 
-  private native <T> ReturnValue<T> nativeCallWithReturn(JsArrayMixed mixedArray) /*-{
+  private native <T extends JavaScriptObject> JsReturnValue<T> nativeCallWithReturn(JsArrayMixed mixedArray) /*-{
     return this.fn.apply(null, mixedArray)
   }-*/;
 }

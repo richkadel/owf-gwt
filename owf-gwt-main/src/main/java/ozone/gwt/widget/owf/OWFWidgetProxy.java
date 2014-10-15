@@ -8,7 +8,9 @@ package ozone.gwt.widget.owf;
 import ozone.gwt.widget.WidgetProxy;
 import jsfunction.gwt.EventListener;
 import jsfunction.gwt.JsFunction;
+import jsfunction.gwt.JsResultOrError;
 import jsfunction.gwt.JsReturn;
+import jsfunction.gwt.NoArgsFunction;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArrayMixed;
@@ -109,37 +111,58 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
    * of the last method invoked. So if we want to maintain caller context, we need to manage
    * the returned results, and dispatch results to the right matching contexts.
    * @param methodName
-   * @param resultCallback
+   * @param jsResultOrError
    * @param args
    */
-  private native void nativeCall(String methodName, JsFunction resultCallback, JsArrayMixed args) /*-{
+  private native void nativeCall(String methodName, JsResultOrError jsResultOrError, JsArrayMixed args) /*-{
     var widgetProxy = this;
-    if (resultCallback != null) {
-//      args.push(resultCallback); // can't do this anymore because context is lost in OWF
+    if (jsResultOrError != null) {
+//      args.push(jsResultOrError.result); // can't do this anymore because context is lost in OWF
       if (!widgetProxy.scopedCallbacks) {
         widgetProxy.scopedCallbacks = {};
       }
       var scopedCallback = widgetProxy.scopedCallbacks[methodName];
       if (!scopedCallback) {
         scopedCallback = function(result) {
-          scopedCallback.queue[0](result)
+          var scopedCallback = widgetProxy.scopedCallbacks[methodName];
+          scopedCallback.queue[0].result(result)
           scopedCallback.queue.shift()
         };
         scopedCallback.queue = [];
         widgetProxy.scopedCallbacks[methodName] = scopedCallback;
       }
-      scopedCallback.queue.push(resultCallback);
+      scopedCallback.queue.push(jsResultOrError);
       args.push(scopedCallback);
     }
     if (widgetProxy.isReady) {
-      widgetProxy[methodName].apply(widgetProxy, args);
+      if (widgetProxy[methodName]) {
+        widgetProxy[methodName].apply(widgetProxy, args);
+      } else {
+        var scopedCallback = widgetProxy.scopedCallbacks[methodName];
+        scopedCallback.queue[0].error(new ReferenceError("Unsupported method: "+methodName))
+        scopedCallback.queue.shift()
+      }
     } else {
       $wnd.OWF.RPC.getWidgetProxy(widgetProxy.id, function(readyWidgetProxy) {
         if (widgetProxy.scopedCallbacks && !readyWidgetProxy.scopedCallbacks) {
           readyWidgetProxy.scopedCallbacks = widgetProxy.scopedCallbacks;
         }
-        readyWidgetProxy[methodName].apply(readyWidgetProxy, args);
+        if (readyWidgetProxy[methodName]) {
+          readyWidgetProxy[methodName].apply(readyWidgetProxy, args);
+        } else {
+          var scopedCallback = readyWidgetProxy.scopedCallbacks[methodName];
+          scopedCallback.queue[0].error(new ReferenceError("Unsupported method: "+methodName))
+          scopedCallback.queue.shift()
+        }
       });
     }
+  }-*/;
+
+  public void onReady(NoArgsFunction noArgsFunction) {
+    onReady(JsFunction.create(noArgsFunction));
+  }
+
+  private native void onReady(JsFunction create) /*-{
+    this.onReady(create);
   }-*/;
 }

@@ -14,6 +14,7 @@ import ozone.gwt.widget.WidgetProxyFunction;
 import ozone.gwt.widget.WidgetProxyFunctions;
 import jsfunction.gwt.EventListener;
 import jsfunction.gwt.JsFunction;
+import jsfunction.gwt.NoArgsFunction;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
@@ -22,7 +23,7 @@ import com.google.gwt.user.client.ui.IsWidget;
 //import com.harmonia.sapphire.client.MessageHandler;
 //import com.harmonia.sapphire.client.Sapphire;
 
-public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandle { //, MessageHandler {
+public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandle { 
   
   private static final Logger log = Logger.getLogger(OZONEWidgetFramework.class.getName());
   
@@ -43,7 +44,6 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
   }-*/;
   
   protected OZONEWidgetFramework() {
-//    Sapphire.setMessageHandler(this); 
     widgetState = getWidgetState();
   }
 
@@ -208,7 +208,7 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
             // These should already be "ready" proxies
             int len = dests.length();
             for (int i = 0; i < len; i++) {
-              onReceipt.intentReceived(dests.get(i));
+              callWhenReady(onReceipt, dests.get(i));
             }
           }
         }
@@ -217,6 +217,14 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
     nativeStartActivity(intent.getAction(), intent.getDataType(), data, receiptFunction);
   }
   
+  private void callWhenReady(final OnReceipt onReceipt, final OWFWidgetProxy owfWidgetProxy) {
+    owfWidgetProxy.onReady(new NoArgsFunction() {
+      public void callback() {
+        onReceipt.intentReceived(owfWidgetProxy);
+      }
+    });
+  }
+
   private native void nativeStartActivity(String action, String dataType,
       JavaScriptObject data, JsFunction onReceipt) /*-{
     $wnd.OWF.Intents.startActivity(
@@ -240,10 +248,18 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
       JsFunction.create(new EventListener<IntentReceived>() {
         @Override
         public void callback(IntentReceived event) {
-          intent.coercedIntentReceived(event.getSender(), event.getData());
+          callWhenReady(intent, event.getSender(), event.getData());
         }
       })
     );
+  }
+  
+  private void callWhenReady(final Intent<?> intent, final WidgetProxy sender, final JavaScriptObject data) {
+    sender.onReady(new NoArgsFunction() {
+      public void callback() {
+        intent.coercedIntentReceived(sender, data);
+      }
+    });
   }
   
   private native void nativeReceive(String action, String dataType, JsFunction listener) /*-{

@@ -21,6 +21,7 @@ import ozone.gwt.widget.WidgetProxyFunctions;
 //import jsfunction.gwt.StringResult;
 import jsfunction.gwt.EventListener;
 import jsfunction.gwt.JsReturn;
+import jsfunction.gwt.NoArgsFunction;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
@@ -65,6 +66,11 @@ public class DirectWidgetHandle implements WidgetHandle, WidgetProxy {
       }
       readyCallbacks = null;
     }
+  }
+
+  @Override
+  public void onReady(NoArgsFunction noArgsFunction) {
+    noArgsFunction.callback();
   }
   
   public IsWidget getGWTIsWidget() {

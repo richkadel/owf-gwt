@@ -8,6 +8,7 @@ package ozone.gwt.widget;
 //import jsfunction.gwt.StringResult;
 
 import jsfunction.gwt.JsReturn;
+import jsfunction.gwt.NoArgsFunction;
 
 import com.google.gwt.core.client.JavaScriptObject;
 
@@ -28,4 +29,6 @@ public interface WidgetProxy {
   public void call(String methodName, JsReturn<?> resultCallback, Object... functionArgs);
 
   public void call(String methodName, Object... functionArgs);
+
+  public void onReady(NoArgsFunction noArgsFunction);
 }

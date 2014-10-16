@@ -23,13 +23,36 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
     return this.id
   }-*/;
   
-//  public static native OWFWidgetProxy create(String widgetId) /*-{
-//    return {
-//      id : widgetId
-//    }
-//  }-*/;
   
-//    
+  public native void sendMessage(JavaScriptObject message) /*-{
+    this.sendMessage(message);
+    
+// This method supports the equivalent of the following JavaScript example:
+//
+////      var widgetProxy = OWF.RPC.getWidgetProxy(id);
+////      widgetProxy.sendMessage({data:'foo'});
+  }-*/;
+  
+// I am not implementing this because OWF GWT is not supporting non-ready widget proxies.
+// If you want a WidgetProxy, you can get it with getWidgetProxy(id, callback), and the proxy will be ready
+// If the native underlying OWF code gets a non-ready widgetProxy, it should not return it, but instead
+// it should call the getWidgetProxy method, and when returned, the wrapping method should return the
+// ready version only.  Since most OWF functions are asynchronous with deferred results, this
+// additional level of deferred execution is not visible to the caller.
+//
+//  public native boolean isReady() /*-{
+//    return (this.isReady == true) // if "undefined", this still returns false, but "return isReady" returns null and breaks, I think
+//  }-*/;
+//
+//  public void getWidgetProxy(NoArgsFunction readyCallback) {
+//    onReady(JsFunction.create(readyCallback));
+//  }
+  
+  static void getWidgetProxy(String widgetId, EventListener<WidgetProxy> readyCallback) {
+    getWidgetProxy(widgetId, JsFunction.create(readyCallback));
+    
+// This method supports the equivalent of the following JavaScript example:
+//
 ////    OWF.RPC.getWidgetProxy('instanceGuid of widgetA', function(widgetA) {
 ////
 ////      widgetA.add(1,2,3, function(result) {
@@ -39,6 +62,17 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
 ////      widgetA.sendMessage('some secret message');
 ////
 ////    });
+  }
+  
+  private static native void getWidgetProxy(String widgetId, JsFunction readyCallback) /*-{
+    $wnd.OWF.RPC.getWidgetProxy(widgetId, readyCallback);
+  }-*/;
+  
+  public void call(String methodName, JsReturn<?> resultCallback, Object... functionArgs) {
+    nativeCall(methodName, JsFunction.create(resultCallback), JsFunction.varArgsToMixedArray(functionArgs));
+    
+// This method supports the equivalent of the following JavaScript example:
+//
 //// JavaScript apply sends array as varargs:    fun.apply(thisArg[, argsArray])
 //    // square brackets above are documentation syntax for "optional", but see below...
 //    //
@@ -47,56 +81,6 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
 //    //   widgetProxy["setColor"].apply(widgetProxy, [color])
 //    // (the square brackets are literal in this case, not syntax for optional
 //  }-*/;
-  
-  public native void sendMessage(JavaScriptObject message) /*-{
-    this.sendMessage(message);
-////      var widgetProxy = OWF.RPC.getWidgetProxy(id);
-////      widgetProxy.sendMessage({data:'foo'});
-  }-*/;
-  
-//  public native boolean isReady() /*-{
-//    return (this.isReady == true) // if "undefined", this still returns false, but "return isReady" returns null and breaks, I think
-//  }-*/;
-  
-//  public void getWidgetProxy(NoArgsFunction readyCallback) {
-//    onReady(JsFunction.create(readyCallback));
-//  }
-  
-  static void getWidgetProxy(String widgetId, EventListener<WidgetProxy> readyCallback) {
-    getWidgetProxy(widgetId, JsFunction.create(readyCallback));
-  }
-  
-  private static native void getWidgetProxy(String widgetId, JsFunction readyCallback) /*-{
-    $wnd.OWF.RPC.getWidgetProxy(widgetId, readyCallback);
-  }-*/;
-  
-//  private void callWithResult(String methodName, JsReturn resultCallback, Object[] functionArgs) {
-//    nativeCall(methodName, JsFunction.create(resultCallback), JsFunction.varArgsToMixedArray(functionArgs));
-//  }
-
-//  public void call(String methodName, BooleanResult resultCallback, Object... functionArgs) {
-//    callWithResult(methodName, resultCallback, functionArgs);
-//  }
-//
-//  public void call(String methodName, IntResult resultCallback, Object... functionArgs) {
-//    callWithResult(methodName, resultCallback, functionArgs);
-//  }
-//
-//  public void call(String methodName, DoubleResult resultCallback, Object... functionArgs) {
-//    callWithResult(methodName, resultCallback, functionArgs);
-//  }
-//
-//  public void call(String methodName, StringResult resultCallback, Object... functionArgs) {
-//    callWithResult(methodName, resultCallback, functionArgs);
-//  }
-//
-//  public void call(String methodName, JsResult<?> resultCallback, Object... functionArgs) {
-//    callWithResult(methodName, resultCallback, functionArgs);
-//  }
-
-  public void call(String methodName, JsReturn<?> resultCallback, Object... functionArgs) {
-//    callWithResult(methodName, resultCallback, functionArgs);
-    nativeCall(methodName, JsFunction.create(resultCallback), JsFunction.varArgsToMixedArray(functionArgs));
   }
 
   public void call(String methodName, Object... functionArgs) {
@@ -117,7 +101,6 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
   private native void nativeCall(String methodName, JsResultOrError jsResultOrError, JsArrayMixed args) /*-{
     var widgetProxy = this;
     if (jsResultOrError != null) {
-//      args.push(jsResultOrError.result); // can't do this anymore because context is lost in OWF
       if (!widgetProxy.scopedCallbacks) {
         widgetProxy.scopedCallbacks = {};
       }
@@ -125,13 +108,13 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
       if (!scopedCallback) {
         scopedCallback = function(result) {
           var scopedCallback = widgetProxy.scopedCallbacks[methodName];
-          scopedCallback.queue[0].result(result)
+          scopedCallback.queue[0].result(result) // calling the "result" function from the jsResultOrError
           scopedCallback.queue.shift()
         };
-        scopedCallback.queue = [];
+        scopedCallback.queue = []; // start a queue of jsResultOrError objects
         widgetProxy.scopedCallbacks[methodName] = scopedCallback;
       }
-      scopedCallback.queue.push(jsResultOrError);
+      scopedCallback.queue.push(jsResultOrError); // jsResultOrError has properties "result" and "error", that are functions
       args.push(scopedCallback);
     }
     if (widgetProxy.isReady) {
@@ -164,5 +147,10 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
 
   private native void onReady(JsFunction create) /*-{
     this.onReady(create);
+  }-*/;
+
+  // Just for internal inspection
+  static native boolean isReady(WidgetProxy sender) /*-{
+    return (sender.isReady == true) // safe way to return boolean from JavaScript to GWT Java
   }-*/;
 }

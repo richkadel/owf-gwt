@@ -14,15 +14,9 @@ import ozone.gwt.widget.WidgetHandle;
 import ozone.gwt.widget.WidgetProxy;
 import ozone.gwt.widget.WidgetProxyFunction;
 import ozone.gwt.widget.WidgetProxyFunctions;
-//import jsfunction.gwt.DoubleResult;
-//import jsfunction.gwt.IntResult;
-//import jsfunction.gwt.BooleanResult;
-//import jsfunction.gwt.JsResult;
-//import jsfunction.gwt.StringResult;
 import jsfunction.gwt.EventListener;
+import jsfunction.gwt.JsError;
 import jsfunction.gwt.JsReturn;
-import jsfunction.gwt.NoArgsFunction;
-import jsfunction.gwt.VarArgsFunction;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
@@ -69,11 +63,6 @@ public class DirectWidgetHandle implements WidgetHandle, WidgetProxy {
     }
   }
 
-  @Override
-  public void onReady(NoArgsFunction noArgsFunction) {
-    noArgsFunction.callback();
-  }
-  
   public IsWidget getGWTIsWidget() {
     return gwtIsWidget;
   }
@@ -106,40 +95,9 @@ public class DirectWidgetHandle implements WidgetHandle, WidgetProxy {
     }
   }
   
-//  @Override
-//  public void call(String methodName, BooleanResult resultCallback,
-//      Object... functionArgs) {
-//    callWithResult(methodName, resultCallback, functionArgs);
-//  }
-//  
-//  @Override
-//  public void call(String methodName, IntResult resultCallback,
-//      Object... functionArgs) {
-//    callWithResult(methodName, resultCallback, functionArgs);
-//  }
-//  
-//  @Override
-//  public void call(String methodName, DoubleResult resultCallback,
-//      Object... functionArgs) {
-//    callWithResult(methodName, resultCallback, functionArgs);
-//  }
-//  
-//  @Override
-//  public void call(String methodName, StringResult resultCallback,
-//      Object... functionArgs) {
-//    callWithResult(methodName, resultCallback, functionArgs);
-//  }
-//  
-//  @Override
-//  public void call(String methodName, JsResult<?> resultCallback,
-//      Object... functionArgs) {
-//    callWithResult(methodName, resultCallback, functionArgs);
-//  }
-  
   @Override
   public void call(String methodName, JsReturn<?> resultCallback,
       Object... functionArgs) {
-//    callWithResult(methodName, resultCallback, functionArgs);
     if (registeredFunctions != null) {
       int len = registeredFunctions.length();
       for (int i = 0; i < len; i++) {
@@ -150,23 +108,8 @@ public class DirectWidgetHandle implements WidgetHandle, WidgetProxy {
         }
       }
     }
-    // Ignore if not there? -- throw new Error("Attempt to call a non-existent widget proxy function");
+    resultCallback.onError(JsError.create(new Error("Attempt to call a non-existent widget proxy function")));
   }
-  
-//  private void callWithResult(String methodName, JsReturn resultCallback,
-//      Object[] functionArgs) {
-//    if (registeredFunctions != null) {
-//      int len = registeredFunctions.length();
-//      for (int i = 0; i < len; i++) {
-//        WidgetProxyFunction wpf = registeredFunctions.get(i);
-//        if (wpf.getName().equals(methodName)) {
-//          wpf.call(resultCallback, functionArgs);
-//          break;
-//        }
-//      }
-//    }
-//    // Ignore if not there? -- throw new Error("Attempt to call a non-existent widget proxy function");
-//  }
   
   @Override
   public void call(String methodName, Object... functionArgs) {
@@ -179,7 +122,9 @@ public class DirectWidgetHandle implements WidgetHandle, WidgetProxy {
         }
       }
     }
-//ignore if not there? --    throw new Error("Attempt to call a non-existent widget proxy function");
+    // This is "fire and forget", so I'm opting to...
+    // ignore if not there rather than throw new Error("Attempt to call a non-existent widget proxy function");
+    // If you want to catch the Error, you can call the method with a "JsReturnVoid" instead.
   }
   
   @Override
@@ -235,69 +180,6 @@ public class DirectWidgetHandle implements WidgetHandle, WidgetProxy {
       return messageHandler;
     }
   }
-  
-//  public void startIntent(Intent intent, JavaScriptObject data, final OnReceipt onReceipt) {
-//    if (onReceipt == null) {
-//      nativeStartIntent(action, dataType, data, null);
-//    } else {
-//      EventListener<JsArray<OWFWidgetProxy>> nativeReceipt = new EventListener<JsArray<OWFWidgetProxy>>() {
-//        @Override
-//        public void callback(JsArray<OWFWidgetProxy> dests) {
-//          // These should already be "ready" proxies
-//          int len = dests.length();
-//          for (int i = 0; i < len; i++) {
-//            onReceipt.intentReceived(dests.get(i));
-//          }
-//        }
-//      };
-//      nativeStartIntent(action, dataType, data, JsFunction.create(nativeReceipt));
-//    }
-//  }
-//  
-//  private native void nativeStartIntent(String action, String dataType,
-//      JavaScriptObject data, JsFunction onReceipt) /*-{
-//    $wnd.OWF.Intents.startIntent(
-//      {
-//        action : action, 
-//        dataType : dataType
-//      },
-//      {
-//        data : data
-//      },
-//      onReceipt
-//// , not passing in desination widget proxies, which is an OWF option
-//    );
-//  }-*/;
-//  
-//  public void receive(final Intent intent) {
-//    nativeReceive(
-//      intent.getAction(),
-//      intent.getDataType(),
-//      JsFunction.create(new EventListener<IntentReceived>() {
-//        @Override
-//        public void callback(IntentReceived event) {
-//          intent.intentReceived(event.getSender(), event.getData());
-//        }
-//      })
-//    );
-//  }
-//  
-//  private native void nativeReceive(String action, String dataType, JsFunction listener) /*-{
-//    $wnd.OWF.Intents.receive(
-//      {
-//        action : action,
-//        dataType : dataType
-//      },
-//      function(sender, intent, data) {
-//        var senderWidgetProxy = $wnd.OWF.RPC.getWidgetProxy(sender);
-//        listener({
-//          senderWidgetProxy : senderWidgetProxy,
-//          intent : intent,
-//          data : data.data
-//        })
-//      }
-//    );
-//  }-*/;
   
   private class IntentHandler {
 

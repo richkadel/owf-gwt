@@ -117,6 +117,8 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
     
     handleDirectMessage(JsFunction.create(directMessageCallback));
     
+// This method supports the equivalent of the following JavaScript example:
+//
 //  OWF.RPC.handleDirectMessage(function(msg) {
 //    // do something with the message
 //  });
@@ -135,6 +137,8 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
     
     $wnd.OWF.RPC.registerFunctions(widgetProxyFunctions);
     
+// This method supports the equivalent of the following JavaScript example:
+//
 //    Calculator = {
 //        add: function() {
 //          var args = arguments,
@@ -197,13 +201,13 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
           String senderWidgetId = args.getString(0);
           OWFWidgetProxy.getWidgetProxy(senderWidgetId, new EventListener<WidgetProxy>() {
             public void callback(final WidgetProxy sender) {
-              sender.onReady(new NoArgsFunction() {
-                public void callback() {
+//              sender.onReady(new NoArgsFunction() {
+//                public void callback() {
                   String message = args.getString(1);
                   handler.callback(new StringMessage(sender, message)); // ignore third parameter, channel name
                 }
-              });
-            }
+//              });
+//            }
           });
         }
       })
@@ -227,10 +231,16 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
         new EventListener<JsArray<OWFWidgetProxy>>() {
           @Override
           public void callback(JsArray<OWFWidgetProxy> dests) {
-            // These should already be "ready" proxies
             int len = dests.length();
             for (int i = 0; i < len; i++) {
-              callWhenReady(onReceipt, dests.get(i));
+              
+//              callWhenReady(onReceipt, dests.get(i));
+// These should already be "ready" proxies
+if (!OWFWidgetProxy.isReady(dests.get(i))) {
+  throw new Error("Given WidgetProxy is not ready! It should be. Wrap in OWFWidgetProxy.getWidgetProxy() callback method before returning.");
+}
+// I can remove this check after some testing
+              onReceipt.intentReceived(dests.get(i));
             }
           }
         }
@@ -239,13 +249,14 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
     nativeStartActivity(intent.getAction(), intent.getDataType(), data, receiptFunction);
   }
   
-  private void callWhenReady(final OnReceipt onReceipt, final OWFWidgetProxy owfWidgetProxy) {
-    owfWidgetProxy.onReady(new NoArgsFunction() {
-      public void callback() {
-        onReceipt.intentReceived(owfWidgetProxy);
-      }
-    });
-  }
+// I can remove this method after some testing
+//  private void callWhenReady(final OnReceipt onReceipt, final OWFWidgetProxy owfWidgetProxy) {
+//    owfWidgetProxy.onReady(new NoArgsFunction() {
+//      public void callback() {
+//        onReceipt.intentReceived(owfWidgetProxy);
+//      }
+//    });
+//  }
 
   private native void nativeStartActivity(String action, String dataType,
       JavaScriptObject data, JsFunction onReceipt) /*-{
@@ -270,19 +281,26 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
       JsFunction.create(new EventListener<IntentReceived>() {
         @Override
         public void callback(IntentReceived event) {
-          callWhenReady(intent, event.getSender(), event.getData());
+//          callWhenReady(intent, event.getSender(), event.getData());
+// sender should already be a "ready" proxy
+if (!OWFWidgetProxy.isReady(event.getSender())) {
+  throw new Error("Given WidgetProxy is not ready! It should be. Wrap in OWFWidgetProxy.getWidgetProxy() callback method before returning.");
+}
+// I can remove this check after some testing
+          intent.coercedIntentReceived(event.getSender(), event.getData());
         }
       })
     );
   }
   
-  private void callWhenReady(final Intent<?> intent, final WidgetProxy sender, final JavaScriptObject data) {
-    sender.onReady(new NoArgsFunction() {
-      public void callback() {
-        intent.coercedIntentReceived(sender, data);
-      }
-    });
-  }
+// I can remove this method after some testing
+//  private void callWhenReady(final Intent<?> intent, final WidgetProxy sender, final JavaScriptObject data) {
+//    sender.onReady(new NoArgsFunction() {
+//      public void callback() {
+//        intent.coercedIntentReceived(sender, data);
+//      }
+//    });
+//  }
   
   private native void nativeReceive(String action, String dataType, JsFunction listener) /*-{
     $wnd.OWF.Intents.receive(
@@ -291,11 +309,14 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
         dataType : dataType
       },
       function(sender, intent, data) {
-        var senderWidgetProxy = $wnd.OWF.RPC.getWidgetProxy(sender);
-        listener({
-          senderWidgetProxy : senderWidgetProxy,
-          intent : intent,
-          data : data.data
+        $wnd.OWF.RPC.getWidgetProxy(sender, function(senderWidgetProxy) {
+          senderWidgetProxy.onReady(function() {
+            listener({
+              senderWidgetProxy : senderWidgetProxy,
+              intent : intent,
+              data : data.data
+            })
+          })
         })
       }
     );

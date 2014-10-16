@@ -7,6 +7,6 @@ public final class OWFWidgetState extends JavaScriptObject {
   protected OWFWidgetState() {}
   
   public native void activateWidget() /*-{
-    this.activateWidget($wnd.OWF.getWidgetGuid()); // not providing callback...not planning to use one... Is this OK?
+    this.activateWidget($wnd.OWF.getWidgetGuid()); // not providing callback...not planning to use one in current OWF GWT implementation
   }-*/;
 }

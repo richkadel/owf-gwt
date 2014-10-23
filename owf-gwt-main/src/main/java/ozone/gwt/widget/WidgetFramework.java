@@ -3,7 +3,10 @@ package ozone.gwt.widget;
 import ozone.gwt.widget.direct.DirectWidgetFramework;
 import ozone.gwt.widget.owf.OZONEWidgetFramework;
 
+import com.google.gwt.event.dom.client.ContextMenuEvent;
+import com.google.gwt.event.dom.client.ContextMenuHandler;
 import com.google.gwt.user.client.ui.IsWidget;
+import com.google.gwt.user.client.ui.RootPanel;
 
 public abstract class WidgetFramework {
   
@@ -21,6 +24,22 @@ public abstract class WidgetFramework {
   }
   
   public static WidgetHandle createWidgetHandle(WidgetContainer widgetContainer, IsWidget gwtIsWidget) {
+    
+    // One-stop shopping to disable context menu for all widgets.
+    // I noticed that if a widget with custom context menus was on top of another widget that did not
+    // disable context menus, the context menu would still show up.  Prime example is the OWF
+    // "Tab Layout". However, this call below also seems to prevent me adding a custom contextmenu
+    // EventListener via JavaScript, so I changed my EventListener to show the menu when I get a
+    // mouse right-click.  
+    
+    RootPanel.get().addDomHandler(new ContextMenuHandler() {
+
+      @Override public void onContextMenu(ContextMenuEvent event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }, ContextMenuEvent.getType());
+    
     return getInstance().createWidgetHandleInstance(widgetContainer, gwtIsWidget);
   }
 

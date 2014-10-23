@@ -340,7 +340,7 @@ if (!OWFWidgetProxy.isReady(event.getSender())) {
     }
 
     public native void trace(JsArrayMixed messages) /*-{
-      this.trace.apply(null, messages);
+      this.trace.apply(this, messages);
     }-*/;
 
     @Override
@@ -349,7 +349,7 @@ if (!OWFWidgetProxy.isReady(event.getSender())) {
     }
 
     public native void debug(JsArrayMixed messages) /*-{
-      this.debug.apply(null, messages);
+      this.debug.apply(this, messages);
     }-*/;
 
     @Override
@@ -358,7 +358,7 @@ if (!OWFWidgetProxy.isReady(event.getSender())) {
     }
 
     public native void info(JsArrayMixed messages) /*-{
-      this.info.apply(null, messages);
+      this.info.apply(this, messages);
     }-*/;
 
     @Override
@@ -367,7 +367,7 @@ if (!OWFWidgetProxy.isReady(event.getSender())) {
     }
 
     public native void warn(JsArrayMixed messages) /*-{
-      this.warn.apply(null, messages);
+      this.warn.apply(this, messages);
     }-*/;
 
     @Override
@@ -376,7 +376,7 @@ if (!OWFWidgetProxy.isReady(event.getSender())) {
     }
 
     public native void error(JsArrayMixed messages) /*-{
-      this.error.apply(null, messages);
+      this.error.apply(this, messages);
     }-*/;
 
     @Override
@@ -385,7 +385,7 @@ if (!OWFWidgetProxy.isReady(event.getSender())) {
     }
     
     public native void fatal(JsArrayMixed messages) /*-{
-      this.fatal.apply(null, messages);
+      this.fatal.apply(this, messages);
     }-*/;
   }
 

@@ -61,10 +61,10 @@ public final class WidgetProxyFunction extends JavaScriptObject {
   }
 
   private native void nativeCall(JsArrayMixed mixedArray) /*-{
-    this.fn.apply(null, mixedArray);
+    this.fn.apply(this, mixedArray);
   }-*/;
 
   private native <T extends JavaScriptObject> JsReturnValue<T> nativeCallWithReturn(JsArrayMixed mixedArray) /*-{
-    return this.fn.apply(null, mixedArray)
+    return this.fn.apply(this, mixedArray)
   }-*/;
 }

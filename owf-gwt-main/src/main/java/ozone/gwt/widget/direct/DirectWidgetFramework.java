@@ -3,7 +3,7 @@ package ozone.gwt.widget.direct;
 import java.util.Map;
 import java.util.HashMap;
 
-import jsfunction.gwt.JsFunction;
+import jsfunction.gwt.JsFunctionUtils;
 import ozone.gwt.widget.WidgetContainer;
 import ozone.gwt.widget.WidgetFramework;
 import ozone.gwt.widget.WidgetHandle;
@@ -54,7 +54,7 @@ public class DirectWidgetFramework extends WidgetFramework {
 
     @Override
     public void trace(Object... messages) {
-      trace(JsFunction.varArgsToMixedArray(messages));
+      trace(JsFunctionUtils.varArgsToMixedArray(messages));
     }
 
     public native void trace(JsArrayMixed messages) /*-{
@@ -67,7 +67,7 @@ public class DirectWidgetFramework extends WidgetFramework {
 
     @Override
     public void debug(Object... messages) {
-      debug(JsFunction.varArgsToMixedArray(messages));
+      debug(JsFunctionUtils.varArgsToMixedArray(messages));
     }
 
     public native void debug(JsArrayMixed messages) /*-{ // according to Mozilla standards documentation, this is an alias for "log"
@@ -80,7 +80,7 @@ public class DirectWidgetFramework extends WidgetFramework {
 
     @Override
     public void info(Object... messages) {
-      info(JsFunction.varArgsToMixedArray(messages));
+      info(JsFunctionUtils.varArgsToMixedArray(messages));
     }
 
     public native void info(JsArrayMixed messages) /*-{
@@ -93,7 +93,7 @@ public class DirectWidgetFramework extends WidgetFramework {
 
     @Override
     public void warn(Object... messages) {
-      warn(JsFunction.varArgsToMixedArray(messages));
+      warn(JsFunctionUtils.varArgsToMixedArray(messages));
     }
 
     public native void warn(JsArrayMixed messages) /*-{
@@ -106,7 +106,7 @@ public class DirectWidgetFramework extends WidgetFramework {
 
     @Override
     public void error(Object... messages) {
-      error(JsFunction.varArgsToMixedArray(messages));
+      error(JsFunctionUtils.varArgsToMixedArray(messages));
     }
 
     public native void error(JsArrayMixed messages) /*-{
@@ -119,7 +119,7 @@ public class DirectWidgetFramework extends WidgetFramework {
 
     @Override
     public void fatal(Object... messages) {
-      fatal(JsFunction.varArgsToMixedArray(messages));
+      fatal(JsFunctionUtils.varArgsToMixedArray(messages));
     }
     
     public native void fatal(JsArrayMixed messages) /*-{ // according to Mozilla standards documentation, there is no "fatal()"

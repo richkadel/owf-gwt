@@ -1,7 +1,7 @@
 package ozone.gwt.widget;
 
-import jsfunction.gwt.EventListener;
-import jsfunction.gwt.VarArgsFunction;
+import jsfunction.gwt.functions.EventListener;
+import jsfunction.gwt.functions.VarArgsFunction;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.user.client.ui.IsWidget;

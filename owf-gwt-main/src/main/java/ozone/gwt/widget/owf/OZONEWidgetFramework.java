@@ -12,10 +12,11 @@ import ozone.gwt.widget.WidgetLogger;
 import ozone.gwt.widget.WidgetProxy;
 import ozone.gwt.widget.WidgetProxyFunction;
 import ozone.gwt.widget.WidgetProxyFunctions;
-import jsfunction.gwt.EventListener;
 import jsfunction.gwt.JsFunction;
-import jsfunction.gwt.NoArgsFunction;
-import jsfunction.gwt.VarArgsFunction;
+import jsfunction.gwt.JsFunctionUtils;
+import jsfunction.gwt.functions.EventListener;
+import jsfunction.gwt.functions.NoArgsFunction;
+import jsfunction.gwt.functions.VarArgsFunction;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
@@ -336,7 +337,7 @@ if (!OWFWidgetProxy.isReady(event.getSender())) {
   
     @Override
     public void trace(Object... messages) {
-      trace(JsFunction.varArgsToMixedArray(messages));
+      trace(JsFunctionUtils.varArgsToMixedArray(messages));
     }
 
     public native void trace(JsArrayMixed messages) /*-{
@@ -345,7 +346,7 @@ if (!OWFWidgetProxy.isReady(event.getSender())) {
 
     @Override
     public void debug(Object... messages) {
-      debug(JsFunction.varArgsToMixedArray(messages));
+      debug(JsFunctionUtils.varArgsToMixedArray(messages));
     }
 
     public native void debug(JsArrayMixed messages) /*-{
@@ -354,7 +355,7 @@ if (!OWFWidgetProxy.isReady(event.getSender())) {
 
     @Override
     public void info(Object... messages) {
-      info(JsFunction.varArgsToMixedArray(messages));
+      info(JsFunctionUtils.varArgsToMixedArray(messages));
     }
 
     public native void info(JsArrayMixed messages) /*-{
@@ -363,7 +364,7 @@ if (!OWFWidgetProxy.isReady(event.getSender())) {
 
     @Override
     public void warn(Object... messages) {
-      warn(JsFunction.varArgsToMixedArray(messages));
+      warn(JsFunctionUtils.varArgsToMixedArray(messages));
     }
 
     public native void warn(JsArrayMixed messages) /*-{
@@ -372,7 +373,7 @@ if (!OWFWidgetProxy.isReady(event.getSender())) {
 
     @Override
     public void error(Object... messages) {
-      error(JsFunction.varArgsToMixedArray(messages));
+      error(JsFunctionUtils.varArgsToMixedArray(messages));
     }
 
     public native void error(JsArrayMixed messages) /*-{
@@ -381,7 +382,7 @@ if (!OWFWidgetProxy.isReady(event.getSender())) {
 
     @Override
     public void fatal(Object... messages) {
-      fatal(JsFunction.varArgsToMixedArray(messages));
+      fatal(JsFunctionUtils.varArgsToMixedArray(messages));
     }
     
     public native void fatal(JsArrayMixed messages) /*-{

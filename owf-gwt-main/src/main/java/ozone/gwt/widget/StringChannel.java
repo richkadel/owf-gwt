@@ -1,6 +1,6 @@
 package ozone.gwt.widget;
 
-import jsfunction.gwt.EventListener;
+import jsfunction.gwt.functions.EventListener;
 
 public abstract class StringChannel extends EventingChannel {
   

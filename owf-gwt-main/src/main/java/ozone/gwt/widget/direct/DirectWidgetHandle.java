@@ -14,9 +14,9 @@ import ozone.gwt.widget.WidgetHandle;
 import ozone.gwt.widget.WidgetProxy;
 import ozone.gwt.widget.WidgetProxyFunction;
 import ozone.gwt.widget.WidgetProxyFunctions;
-import jsfunction.gwt.EventListener;
-import jsfunction.gwt.JsError;
-import jsfunction.gwt.JsReturn;
+import jsfunction.gwt.functions.EventListener;
+import jsfunction.gwt.returns.JsReturn;
+import jsfunction.gwt.types.JsError;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;

@@ -1,6 +1,6 @@
 package ozone.gwt.widget;
 
-import jsfunction.gwt.JsReturn;
+import jsfunction.gwt.returns.JsReturn;
 
 import com.google.gwt.core.client.JavaScriptObject;
 

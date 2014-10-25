@@ -1,9 +1,9 @@
 package ozone.gwt.widget;
 
-import jsfunction.gwt.NoArgsFunction;
-import jsfunction.gwt.NoArgsFunctionReturn;
-import jsfunction.gwt.VarArgsFunction;
-import jsfunction.gwt.VarArgsFunctionReturn;
+import jsfunction.gwt.functions.NoArgsFunction;
+import jsfunction.gwt.functions.NoArgsFunctionReturn;
+import jsfunction.gwt.functions.VarArgsFunction;
+import jsfunction.gwt.functions.VarArgsFunctionReturn;
 
 import com.google.gwt.core.client.JsArray;
 

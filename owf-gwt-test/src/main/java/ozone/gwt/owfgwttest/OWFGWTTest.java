@@ -1,7 +1,8 @@
 package ozone.gwt.owfgwttest;
 
 import jsfunction.gwt.JsFunction;
-import jsfunction.gwt.NoArgsFunction;
+import jsfunction.gwt.JsFunctionUtils;
+import jsfunction.gwt.functions.NoArgsFunction;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.JsArrayMixed;
@@ -44,7 +45,7 @@ public class OWFGWTTest implements EntryPoint {
   }-*/;
 
   public void log(Object... varargs) {
-    nativeLog(JsFunction.varArgsToMixedArray(varargs));
+    nativeLog(JsFunctionUtils.varArgsToMixedArray(varargs));
   }
   
   public native void nativeLog(JsArrayMixed arguments) /*-{

@@ -6,11 +6,12 @@ package ozone.gwt.widget.owf;
 //import jsfunction.gwt.JsResult;
 //import jsfunction.gwt.StringResult;
 import ozone.gwt.widget.WidgetProxy;
-import jsfunction.gwt.EventListener;
 import jsfunction.gwt.JsFunction;
-import jsfunction.gwt.JsResultOrError;
-import jsfunction.gwt.JsReturn;
-import jsfunction.gwt.NoArgsFunction;
+import jsfunction.gwt.JsFunctionUtils;
+import jsfunction.gwt.functions.EventListener;
+import jsfunction.gwt.functions.NoArgsFunction;
+import jsfunction.gwt.returns.JsResultOrError;
+import jsfunction.gwt.returns.JsReturn;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArrayMixed;
@@ -69,7 +70,7 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
   }-*/;
   
   public void call(String methodName, JsReturn<?> resultCallback, Object... functionArgs) {
-    nativeCall(methodName, JsFunction.create(resultCallback), JsFunction.varArgsToMixedArray(functionArgs));
+    nativeCall(methodName, JsFunction.create(resultCallback), JsFunctionUtils.varArgsToMixedArray(functionArgs));
     
 // This method supports the equivalent of the following JavaScript example:
 //
@@ -84,7 +85,7 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
   }
 
   public void call(String methodName, Object... functionArgs) {
-    nativeCall(methodName, null, JsFunction.varArgsToMixedArray(functionArgs));
+    nativeCall(methodName, null, JsFunctionUtils.varArgsToMixedArray(functionArgs));
   }
 
   /**

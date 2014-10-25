@@ -6,7 +6,10 @@
 
     <gwtVersion>2.6.1</gwtVersion>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jsFunctionGwtVersion>0.0.1-SNAPSHOT</jsFunctionGwtVersion>
+    <!--
+    <jsFunctionGwtVersion>1.0.1-SNAPSHOT</jsFunctionGwtVersion>
+    -->
+    <jsFunctionGwtVersion>1.0</jsFunctionGwtVersion>
     <!--
     <owfGwtVersion>0.0.1</owfGwtVersion>
     -->

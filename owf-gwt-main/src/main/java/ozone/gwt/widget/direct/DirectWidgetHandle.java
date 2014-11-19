@@ -25,6 +25,7 @@ import com.google.gwt.user.client.ui.IsWidget;
 public class DirectWidgetHandle implements WidgetHandle, WidgetProxy {
 
   private static final Map<Intent<?>,IntentHandler> intentHandlers = new HashMap<Intent<?>,IntentHandler>();
+  private static final Map<Intent<?>,PendingIntent> pendingIntents = new HashMap<Intent<?>,PendingIntent>();
   
   private static Map<String,List<Subscription>> channels = new HashMap<String,List<Subscription>>();
   
@@ -198,19 +199,53 @@ public class DirectWidgetHandle implements WidgetHandle, WidgetProxy {
     }
   }
   
+  private class PendingIntent {
+
+    private JavaScriptObject data;
+    private OnReceipt onReceipt;
+
+    PendingIntent(JavaScriptObject data, OnReceipt onReceipt) {
+      this.data = data;
+      this.onReceipt = onReceipt;
+    }
+
+    public JavaScriptObject getData() {
+      return data;
+    }
+
+    public OnReceipt getOnReceipt() {
+      return onReceipt;
+    }
+  }
+  
   @Override
   public void startActivity(Intent<?> intent, JavaScriptObject data, OnReceipt onReceipt) {
     IntentHandler intentHandler = intentHandlers.get(intent);
     if (intentHandler != null) {
-      intentHandler.getIntent().coercedIntentReceived(this, data);
-      if (onReceipt != null) {
-        onReceipt.intentReceived(intentHandler.getRecipient());
-      }
+      sendIntent(intentHandler.getRecipient(), intentHandler.getIntent(), data, onReceipt);
+    } else {
+      pendingIntents.put(intent, new PendingIntent(data, onReceipt));
+    }
+  }
+
+  /**
+   * @param data
+   * @param onReceipt
+   * @param intentHandler
+   */
+  private void sendIntent(WidgetProxy recipient, Intent<?> intent, JavaScriptObject data, OnReceipt onReceipt) {
+    intent.coercedIntentReceived(this, data);
+    if (onReceipt != null) {
+      onReceipt.intentReceived(recipient);
     }
   }
   
   @Override
   public void receive(Intent<?> intent) {
     intentHandlers.put(intent, new IntentHandler(intent));
+    PendingIntent pendingIntent = pendingIntents.remove(intent);
+    if (pendingIntent != null) {
+      sendIntent(this, intent, pendingIntent.getData(), pendingIntent.getOnReceipt());
+    }
   }
 }

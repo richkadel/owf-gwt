@@ -1,0 +1,57 @@
+#!/bin/bash ############################ beginning of script ############################
+
+# This script was created from OWF-GWT's built-in widget descriptor generator script
+# generator (yes, I said "generator" twice). If you run your OWF-GWT widgets in a
+# DirectWidgetFramework implementation, and configure them the way you would like
+# to see them in an OWF environment as well, you can open a Web Browser console
+# session (e.g., Google Chrome "Developer Tools") and execute (from the JavaScript
+# console's interactive prompt) the global function:
+#
+#     > __OwfGwtSaveDescriptors()
+# 
+# If successful, it should respond with:
+# 
+#     < "Your browser should be downloading a script that will create OWF widget 
+#     descriptor files for all widgets active in this DirectWidgetFramework.
+#     Execute this script from a Unix terminal, to save the widgets to /tmp/widgetdescriptors,
+#     then move them to an accessible URL (e.g., into your WAR file).
+#     Make the file executable or "bash mkdesc.sh" 
+#     (With no arguments, the script will print usage details and examples.)
+# 
+#     You may also want to save this script in your software code repository to
+#     create new widget descriptors for new environments you may need to deploy
+#     to in the future."
+#
+# And the browser should prompt for you to download the "potentially harmful" script
+# "mkdesc.sh". (Potentially harmful because it is a linux script, of course.)
+# Save it to an accessible location, or check it into your baseline so you
+# can execute it whenever you need to regenerate widget descriptors for a new
+# environment.
+# 
+# See the usage block below or execute mkdesc.sh with no arguments.
+
+if [ $# == 0 ]; then
+  echo "usage $0 <appUrlPrefix> [<descriptorDir>/] [<appParams>]"
+  echo 
+  echo "appParams are in URL parameter format: ?<name>=<value[\\&<name>=<value>...]"
+  echo "  srctype=debug (include non-obfuscated debug versions of scripts when possible)"
+  echo "  superdevmode=true (load widgets in superdevmode;"
+  echo "    set widget title bar refresh button to recompile source from local codeServer)"
+  echo
+  echo "Examples:"
+  echo "  $0 https://raconteur.combat.mil:8443/sapphire-jboss/" 'combatwidgets/'
+  echo "  $0 http://localhost:8888/ 'debugwidgets/' '?srctype=debug\\&superdevmode=true'"
+  echo
+  echo "  ** Important: Note the backslash in front of the ampersand (\\&) in the second"
+  echo "                example. These parameters are sed regex replacement strings,"
+  echo "                and \"&\" is a special character that must be escaped."
+  exit 1
+fi
+
+appUrlPrefix=$1
+descriptorDir=$2
+appParams=$3
+   
+rm -rf /tmp/widgetdescriptors
+mkdir /tmp/widgetdescriptors
+cd /tmp/widgetdescriptors

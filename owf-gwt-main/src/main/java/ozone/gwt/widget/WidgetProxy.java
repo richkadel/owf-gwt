@@ -27,4 +27,12 @@ public interface WidgetProxy {
    * @param functionArgs
    */
   public void call(String methodName, Object... functionArgs);
+  
+  /**
+   * If this WidgetProxy is a proxy for the same widget as the given WidgetProxy
+   * on the "right hand side" (rhs), return true.
+   * @param rhs another WidgetProxy to compare
+   * @return true if both proxies represent the same widget
+   */
+  public boolean isSameWidget(WidgetProxy rhs);
 }

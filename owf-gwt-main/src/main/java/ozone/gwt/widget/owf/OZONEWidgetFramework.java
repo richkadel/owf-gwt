@@ -1,5 +1,8 @@
 package ozone.gwt.widget.owf;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.logging.Logger;
 
 import ozone.gwt.widget.Intent;
@@ -37,6 +40,8 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
   
   private OWFLogger owfLogger = OWFLogger.create();
 
+  private List<Intent<?>> intentsReceived = new ArrayList<Intent<?>>();
+
   public static native boolean isRunningInOWF() /*-{
     if (window.parent.name.indexOf("preferenceLocation\":\"") > 0) {
       return true;
@@ -48,6 +53,71 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
   protected OZONEWidgetFramework() {
     widgetState = getWidgetState();
   }
+  
+//  @Override
+//  public void addSaveWidgetCallback(NoArgsFunction callback) {
+//    addWidgetHeaderButton("save", callback);
+//  }
+  
+  @Override
+  public boolean hasWidgetHeader() {
+    return true;
+  }
+  
+  /**
+   * If hasWidgetHeader() is true, this method can add a button to the header to perform
+   * a callback on the widget.
+   * 
+   * It appears that OWF supports the tool types from EXT/JS 4, documented here:
+   * 
+   * http://www.objis.com/formationextjs/lib/extjs-4.0.0/docs/api/Ext.panel.Tool.html
+   * 
+   * This includes the following list:
+   * 
+   * <ul>
+   * <li>close</ul>
+   * <li>collapse</ul>
+   * <li>down</ul>
+   * <li>expand</ul>
+   * <li>gear</ul>
+   * <li>help</ul>
+   * <li>left</ul>
+   * <li>maximize</ul>
+   * <li>minimize</ul>
+   * <li>minus</ul>
+   * <li>move</ul>
+   * <li>next</ul>
+   * <li>pin</ul>
+   * <li>plus</ul>
+   * <li>prev</ul>
+   * <li>print</ul>
+   * <li>refresh</ul>
+   * <li>resize</ul>
+   * <li>restore</ul>
+   * <li>right</ul>
+   * <li>save</ul>
+   * <li>search</ul>
+   * <li>toggle</ul>
+   * <li>unpin</ul>
+   * <li>up</ul>
+   * </ol>
+   */
+  @Override
+  public void addWidgetHeaderButton(String type, NoArgsFunction callback) {
+    nativeAddWidgetHeaderButton(type, JsFunction.create(callback));
+  }
+  
+  private native void nativeAddWidgetHeaderButton(String type, JsFunction callback) /*-{
+    $wnd.OWF.ready(function() {
+      $wnd.OWF.Chrome.insertHeaderButtons({
+        items:[{
+          type: type, // standard EXT/JS tool
+          itemId: type,
+          handler: callback // function(sender, data) { do something; }
+        }]
+      });
+    })
+  }-*/;
 
   private native OWFWidgetState getWidgetState() /*-{
     var widgetEventingController = $wnd.Ozone.eventing.Widget.getInstance();
@@ -276,6 +346,7 @@ if (!OWFWidgetProxy.isReady(dests.get(i))) {
   
   @Override
   public void receive(final Intent<?> intent) {
+    intentsReceived.add(intent);
     nativeReceive(
       intent.getAction(),
       intent.getDataType(),
@@ -405,5 +476,10 @@ if (!OWFWidgetProxy.isReady(event.getSender())) {
     public native JavaScriptObject getData() /*-{
       return this.data
     }-*/;
+  }
+
+  @Override
+  public Collection<Intent<?>> getIntentsReceived() {
+    return intentsReceived;
   }
 }

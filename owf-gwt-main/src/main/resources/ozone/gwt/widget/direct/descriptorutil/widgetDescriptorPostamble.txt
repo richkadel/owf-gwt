@@ -1,0 +1,15 @@
+    
+    var jsonData = JSON.stringify({
+        status:200,
+        data:data
+    });
+    window.name = jsonData;
+</script>
+    <body>
+        <h3>window.name Transport</h3>
+        Value in window.name is <span id="windowNameData" style="font-weight:bold"></span><br/>
+        HTTP Status Code is <span style="font-weight:bold">200</span>
+    </body>
+</html>
+EOF
+# "EOF" line cannot have leading or trailing spaces. This ends the "sed" command.

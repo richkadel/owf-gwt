@@ -1,14 +1,19 @@
 package ozone.gwt.widget.direct;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.HashMap;
 
 import jsfunction.gwt.JsFunctionUtils;
 import ozone.gwt.widget.WidgetContainer;
+import ozone.gwt.widget.WidgetDescriptor;
 import ozone.gwt.widget.WidgetFramework;
 import ozone.gwt.widget.WidgetHandle;
 import ozone.gwt.widget.WidgetLogger;
+import ozone.gwt.widget.direct.descriptorutil.SaveableText;
+import ozone.gwt.widget.direct.descriptorutil.WidgetDescriptorText;
 
+import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArrayMixed;
 import com.google.gwt.user.client.ui.IsWidget;
 
@@ -21,10 +26,15 @@ public class DirectWidgetFramework extends WidgetFramework {
   private WidgetLogger directLogger = new DirectLogger();
   
   protected DirectWidgetFramework() {
+    registerJavaScriptGlobals();
   }
 
   public static DirectWidgetFramework getInstance() {
     return widgetFramework;
+  }
+  
+  public Collection<WidgetHandle> getWidgetHandles() {
+    return gwtIsWidgetToWidgetHandle.values();
   }
   
   @Override
@@ -130,4 +140,60 @@ public class DirectWidgetFramework extends WidgetFramework {
       }
     }-*/;
   }
+
+  public String getWidgetDescriptorGeneratorScript(String displayGroupName) {
+    
+    StringBuffer script = new StringBuffer();
+
+    script.append(WidgetDescriptorText.INSTANCE.widgetDescriptorScriptPreamble().getText().replaceAll("\\r\\n", "\n"));
+    
+    Collection<WidgetHandle> widgetHandles = DirectWidgetFramework.getInstance().getWidgetHandles();
+    for (WidgetHandle widgetHandle : widgetHandles) {
+      
+      WidgetDescriptor widgetDescriptor = WidgetDescriptor.create(widgetHandle, displayGroupName);
+      
+      script.append(WidgetDescriptorText.INSTANCE.widgetDescriptorSedCommand().getText().replaceAll("\\r\\n", "\n"));
+      script.append(widgetDescriptor.getWidgetName());
+      script.append(".html\n");
+      script.append(WidgetDescriptorText.INSTANCE.widgetDescriptorPreamble().getText().replaceAll("\\r\\n", "\n"));
+      
+      String descriptorString = stringifyPretty(widgetDescriptor);
+      script.append("var data = ");
+      script.append(descriptorString);
+      script.append(";\n");
+      
+      script.append(WidgetDescriptorText.INSTANCE.widgetDescriptorPostamble().getText().replaceAll("\\r\\n", "\n"));
+    }
+    
+    script.append(WidgetDescriptorText.INSTANCE.widgetDescriptorScriptPostamble().getText().replaceAll("\\r\\n", "\n"));
+    
+    return script.toString();
+  }
+  
+  private static native String stringifyPretty(JavaScriptObject jso) /*-{
+    return JSON.stringify(jso, null, '\t');
+  }-*/;
+  
+  public String saveDescriptors() {
+  	String script = getWidgetDescriptorGeneratorScript("SAPPHIRE");
+    SaveableText.create(script).saveAs("mkdesc.sh");
+    return "Your browser should be downloading a script that will create OWF widget \n"
+        + "descriptor files for all widgets active in this DirectWidgetFramework.\n"
+        + "Execute this script from a Unix terminal, to save the widgets to /tmp/widgetdescriptors,\n"
+        + "then move them to an accessible URL (e.g., into your WAR file).\n"
+        + "Make the file executable or \"bash mkdesc.sh\" \n"
+        + "(With no arguments, the script will print usage details and examples.)\n"
+        + "\n"
+        + "You may also want to save this script in your software code repository to\n"
+        + "create new widget descriptors for new environments you may need to deploy\n"
+        + "to in the future.";
+  }
+
+  private native void registerJavaScriptGlobals() /*-{
+    var outerThis = this;
+    $wnd.__OwfGwtSaveDescriptors = function() {
+      return outerThis.@ozone.gwt.widget.direct.DirectWidgetFramework::saveDescriptors()()
+    }
+    console.log("The global function __OwfGwtSaveDescriptors() is available to generate OWF descriptor files.");
+  }-*/;
 }

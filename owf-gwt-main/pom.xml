@@ -36,14 +36,12 @@
           <include>**/*.gwt.xml</include>
         </includes>
       </resource>
-      <!--
       <resource>
         <directory>src/main/resources</directory>
         <includes>
-          <include>**/owf/**</include>
+          <include>**/gwt/**</include>
         </includes>
       </resource>
-      -->
     </resources>
 
     <plugins>

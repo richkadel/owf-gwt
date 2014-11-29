@@ -1,6 +1,7 @@
 package ozone.gwt.widget.direct;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -15,6 +16,7 @@ import ozone.gwt.widget.WidgetProxy;
 import ozone.gwt.widget.WidgetProxyFunction;
 import ozone.gwt.widget.WidgetProxyFunctions;
 import jsfunction.gwt.functions.EventListener;
+import jsfunction.gwt.functions.NoArgsFunction;
 import jsfunction.gwt.returns.JsReturn;
 import jsfunction.gwt.types.JsError;
 
@@ -28,6 +30,8 @@ public class DirectWidgetHandle implements WidgetHandle, WidgetProxy {
   private static final Map<Intent<?>,PendingIntent> pendingIntents = new HashMap<Intent<?>,PendingIntent>();
   
   private static Map<String,List<Subscription>> channels = new HashMap<String,List<Subscription>>();
+  
+  private List<Intent<?>> intentsReceived = new ArrayList<Intent<?>>();
   
   private IsWidget gwtIsWidget;
   private WidgetContainer widgetContainer;
@@ -126,6 +130,11 @@ public class DirectWidgetHandle implements WidgetHandle, WidgetProxy {
     // This is "fire and forget", so I'm opting to...
     // ignore if not there rather than throw new Error("Attempt to call a non-existent widget proxy function");
     // If you want to catch the Error, you can call the method with a "JsReturnVoid" instead.
+  }
+
+  @Override
+  public boolean isSameWidget(WidgetProxy rhs) {
+    return this == rhs;
   }
   
   @Override
@@ -242,10 +251,27 @@ public class DirectWidgetHandle implements WidgetHandle, WidgetProxy {
   
   @Override
   public void receive(Intent<?> intent) {
+    intentsReceived.add(intent);
     intentHandlers.put(intent, new IntentHandler(intent));
     PendingIntent pendingIntent = pendingIntents.remove(intent);
     if (pendingIntent != null) {
       sendIntent(this, intent, pendingIntent.getData(), pendingIntent.getOnReceipt());
     }
+  }
+
+  @Override
+  public boolean hasWidgetHeader() {
+    return false;
+  }
+
+  @Override
+  public void addWidgetHeaderButton(String buttonType, NoArgsFunction callback)
+      throws NoSuchMethodException {
+    throw new NoSuchMethodException();
+  }
+
+  @Override
+  public Collection<Intent<?>> getIntentsReceived() {
+    return intentsReceived;
   }
 }

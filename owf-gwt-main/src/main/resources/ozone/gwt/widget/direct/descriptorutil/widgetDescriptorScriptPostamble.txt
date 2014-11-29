@@ -1,0 +1,15 @@
+
+ls -1 /tmp/widgetdescriptors/ | sed "/paths.txt/d;s*^*${appUrlPrefix}${descriptorDir}*" > /tmp/widgetdescriptors/paths.txt
+
+echo
+echo "# cat /tmp/widgetdescriptors/paths.txt"
+cat /tmp/widgetdescriptors/paths.txt
+echo
+
+echo "# ls /tmp/widgetdescriptors"
+ls /tmp/widgetdescriptors
+echo
+echo "Now move these files into your application's webapp folders or some"
+echo "other location that your destination OWF container will be able to find."
+
+############################ end of script ############################

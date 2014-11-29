@@ -25,6 +25,7 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
   }-*/;
   
   
+  @Override
   public native void sendMessage(JavaScriptObject message) /*-{
     this.sendMessage(message);
     
@@ -69,6 +70,7 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
     $wnd.OWF.RPC.getWidgetProxy(widgetId, readyCallback);
   }-*/;
   
+  @Override
   public void call(String methodName, JsReturn<?> resultCallback, Object... functionArgs) {
     nativeCall(methodName, JsFunction.create(resultCallback), JsFunctionUtils.varArgsToMixedArray(functionArgs));
     
@@ -84,9 +86,15 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
 //  }-*/;
   }
 
+  @Override
   public void call(String methodName, Object... functionArgs) {
     nativeCall(methodName, null, JsFunctionUtils.varArgsToMixedArray(functionArgs));
   }
+  
+  @Override
+  public native boolean isSameWidget(WidgetProxy rhs) /*-{
+    return this.id === rhs.id;
+  }-*/;
 
   /**
    * Designing around an OWF flaw: a proxy method can return a value, but the value is returned to

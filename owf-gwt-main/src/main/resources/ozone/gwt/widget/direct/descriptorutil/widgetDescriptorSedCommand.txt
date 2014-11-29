@@ -1,0 +1,1 @@
+sed -e "s*%appUrlPrefix%*$appUrlPrefix*g;s*%appParams%*$appParams*g" << EOF > 

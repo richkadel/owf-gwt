@@ -109,12 +109,27 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
   
   private native void nativeAddWidgetHeaderButton(String type, JsFunction callback) /*-{
     $wnd.OWF.ready(function() {
+      // Note OWF uses a Dojo isArray() method that does not work on arrays created "from a different window".
+      // I think the fact that GWT uses an iFrame (and I have to invoke OWF via $wnd.OWF instead of the
+      // global "OWF") means we are createing these arrays from a different "window" so the isArray
+      // does not work!  Therefore, we can't use arrays here, BUT since we only have one element, and
+      // the reason "isArray" is called is so OWF can decide if it should wrap the object in an array,
+      // We pass in a single object ONLY, and allow OWF to wrap it.  If we don't do this, and isArray()
+      // returns false, it double-wraps the array, causing OWF to fail to get the configuration object
+      // properties down the line.  Note if we ever neeed to pass in an array of multiple values,
+      // maybe a workaround would be to declare a dummy function in $wnd and execute it, so it can
+      // create the arrays and execute the method. Is that possible?
+      $wnd.OWF.Chrome.removeHeaderButtons({
+        items:{
+          itemId: type
+        }
+      });
       $wnd.OWF.Chrome.insertHeaderButtons({
-        items:[{
+        items:{
           type: type, // standard EXT/JS tool
           itemId: type,
           handler: callback // function(sender, data) { do something; }
-        }]
+        }
       });
     })
   }-*/;
@@ -381,7 +396,8 @@ if (!OWFWidgetProxy.isReady(event.getSender())) {
         dataType : dataType
       },
       function(sender, intent, data) {
-        $wnd.OWF.RPC.getWidgetProxy(sender, function(senderWidgetProxy) {
+        $wnd.OWF.RPC.getWidgetProxy
+            (sender, function(senderWidgetProxy) {
           senderWidgetProxy.onReady(function() {
             listener({
               senderWidgetProxy : senderWidgetProxy,

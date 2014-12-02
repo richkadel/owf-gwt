@@ -1,10 +1,5 @@
 package ozone.gwt.widget.owf;
 
-//import jsfunction.gwt.BooleanResult;
-//import jsfunction.gwt.DoubleResult;
-//import jsfunction.gwt.IntResult;
-//import jsfunction.gwt.JsResult;
-//import jsfunction.gwt.StringResult;
 import ozone.gwt.widget.WidgetProxy;
 import jsfunction.gwt.JsFunction;
 import jsfunction.gwt.JsFunctionUtils;
@@ -50,25 +45,50 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
 //    onReady(JsFunction.create(readyCallback));
 //  }
   
-  static void getWidgetProxy(String widgetId, EventListener<WidgetProxy> readyCallback) {
+  static void getWidgetProxy(final String widgetId, final EventListener<WidgetProxy> readyCallback) {
     getWidgetProxy(widgetId, JsFunction.create(readyCallback));
-    
-// This method supports the equivalent of the following JavaScript example:
-//
-////    OWF.RPC.getWidgetProxy('instanceGuid of widgetA', function(widgetA) {
-////
-////      widgetA.add(1,2,3, function(result) {
-////        console.log(result); // log the result
-////      })
-////
-////      widgetA.sendMessage('some secret message');
-////
-////    });
   }
-  
+//// This method supports the equivalent of the following JavaScript example:
+////
+//////    OWF.RPC.getWidgetProxy('instanceGuid of widgetA', function(widgetA) {
+//////
+//////      widgetA.add(1,2,3, function(result) {
+//////        console.log(result); // log the result
+//////      })
+//////
+//////      widgetA.sendMessage('some secret message');
+//////
+//////    });
+//  }
+//  
   private static native void getWidgetProxy(String widgetId, JsFunction readyCallback) /*-{
     $wnd.OWF.RPC.getWidgetProxy(widgetId, readyCallback);
-  }-*/;
+  }
+//    if ($wnd.OWF.RPC.owfGwtProxyCache === undefined) {
+//      $wnd.OWF.RPC.owfGwtProxyCache = {};
+//    }
+//    var cacheEntry = $wnd.OWF.RPC.owfGwtProxyCache[widgetId];
+//    if (   cacheEntry !== undefined
+//        && cacheEntry.widgetProxy !== null) {
+//      readyCallback(cacheEntry.widgetProxy);
+//    } else {
+//      if (cacheEntry === undefined) {
+//        cacheEntry = $wnd.OWF.RPC.owfGwtProxyCache[widgetId] = {
+//          widgetProxy:null,
+//          readyCallbacks:[]
+//        };
+//      }
+//      cacheEntry.readyCallbacks.push(readyCallback);
+//      $wnd.OWF.RPC.getWidgetProxy(widgetId, function(widgetProxy) {
+//        cacheEntry.widgetProxy = widgetProxy;
+//        var len = cacheEntry.readyCallbacks.length;
+//        for (var i = 0; i < len; i++) {
+//          cacheEntry.readyCallbacks[i](widgetProxy);
+//        }
+//        cacheEntry.readyCallbacks = null;
+//      });
+//    }
+//  }-*/;
   
   @Override
   public void call(String methodName, JsReturn<?> resultCallback, Object... functionArgs) {
@@ -108,6 +128,15 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
    * @param args
    */
   private native void nativeCall(String methodName, JsResultOrError jsResultOrError, JsArrayMixed args) /*-{
+    
+    // IMPORTANT: I learned it is not guaranteed that you can use the same widgetProxy (from the JavaScript side)
+    // for multiple calls; in particular, calls that return values. If you call the same method more than once
+    // in a row, it can lose the callback. I couldn't work around it other than to always call getWidgetProxy()
+    // for every call (as done below).
+    // I should check to see if all of the "scopedCallback" stuff is still necessary. It was a workaround
+    // that worked for some cases, but may not be needed if I'm always calling getWidgetProxy now().
+    // (I'm NOT sure it's not needed though.)
+    
     var widgetProxy = this;
     if (jsResultOrError != null) {
       if (!widgetProxy.scopedCallbacks) {
@@ -126,16 +155,17 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
       scopedCallback.queue.push(jsResultOrError); // jsResultOrError has properties "result" and "error", that are functions
       args.push(scopedCallback);
     }
-    if (widgetProxy.isReady) {
-      if (widgetProxy[methodName]) {
-        widgetProxy[methodName].apply(widgetProxy, args);
-      } else {
-        var scopedCallback = widgetProxy.scopedCallbacks[methodName];
-        scopedCallback.queue[0].error(new ReferenceError("Unsupported method: "+methodName))
-        scopedCallback.queue.shift()
-      }
-    } else {
-      $wnd.OWF.RPC.getWidgetProxy(widgetProxy.id, function(readyWidgetProxy) {
+//    if (widgetProxy.isReady) {
+//      if (widgetProxy[methodName]) {
+//        widgetProxy[methodName].apply(widgetProxy, args);
+//      } else {
+//        var scopedCallback = widgetProxy.scopedCallbacks[methodName];
+//        scopedCallback.queue[0].error(new ReferenceError("Unsupported method: "+methodName))
+//        scopedCallback.queue.shift()
+//      }
+//    } else {
+      $wnd.OWF.RPC.getWidgetProxy
+          (widgetProxy.id, function(readyWidgetProxy) {
         if (widgetProxy.scopedCallbacks && !readyWidgetProxy.scopedCallbacks) {
           readyWidgetProxy.scopedCallbacks = widgetProxy.scopedCallbacks;
         }
@@ -147,7 +177,7 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
           scopedCallback.queue.shift()
         }
       });
-    }
+    //}
   }-*/;
 
   public void onReady(NoArgsFunction noArgsFunction) {

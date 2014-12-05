@@ -62,7 +62,9 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
 //  }
 //  
   private static native void getWidgetProxy(String widgetId, JsFunction readyCallback) /*-{
-    $wnd.OWF.RPC.getWidgetProxy(widgetId, readyCallback);
+    $wnd.OWF.ready(function() {
+      $wnd.OWF.RPC.getWidgetProxy(widgetId, readyCallback);
+    });
   }
 //    if ($wnd.OWF.RPC.owfGwtProxyCache === undefined) {
 //      $wnd.OWF.RPC.owfGwtProxyCache = {};

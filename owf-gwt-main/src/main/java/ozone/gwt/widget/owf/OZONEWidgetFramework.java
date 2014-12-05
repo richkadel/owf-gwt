@@ -131,7 +131,7 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
           handler: callback // function(sender, data) { do something; }
         }
       });
-    })
+    }, this);
   }-*/;
 
   private native OWFWidgetState getWidgetState() /*-{
@@ -189,7 +189,9 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
   }
 
   public native void nativeNotifyWidgetReady() /*-{
-    $wnd.OWF.notifyWidgetReady();
+    $wnd.OWF.ready(function() {
+      $wnd.OWF.notifyWidgetReady();
+    }, this);
   }-*/;
 
   @Override
@@ -211,7 +213,9 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
   }
 
   private native void handleDirectMessage(JsFunction directMessageCallbackFunction) /*-{
-    $wnd.OWF.RPC.handleDirectMessage(directMessageCallbackFunction);
+    $wnd.OWF.ready(function() {
+      $wnd.OWF.RPC.handleDirectMessage(directMessageCallbackFunction);
+    }, this);
   }-*/;
 
   @Override
@@ -221,7 +225,9 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
   
   private native void nativeRegisterWidgetProxyFunctions(JsArray<WidgetProxyFunction> widgetProxyFunctions) /*-{
     
-    $wnd.OWF.RPC.registerFunctions(widgetProxyFunctions);
+    $wnd.OWF.ready(function() {
+      $wnd.OWF.RPC.registerFunctions(widgetProxyFunctions);
+    }, this);
     
 // This method supports the equivalent of the following JavaScript example:
 //
@@ -271,11 +277,13 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
   }
   
   public native void publish(String channelName, String message, String destWidgetId) /*-{
-    if (destWidgetId) {
-      $wnd.OWF.Eventing.publish(channelName, message, destWidgetId);
-    } else {
-      $wnd.OWF.Eventing.publish(channelName, message);
-    }
+    $wnd.OWF.ready(function() {
+      if (destWidgetId) {
+        $wnd.OWF.Eventing.publish(channelName, message, destWidgetId);
+      } else {
+        $wnd.OWF.Eventing.publish(channelName, message);
+      }
+    }, this);
   }-*/;
 
   @Override
@@ -301,12 +309,16 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
   }
 
   private native void subscribe(String channelName, JsFunction handler) /*-{
-    $wnd.OWF.Eventing.subscribe(channelName, handler);
+    $wnd.OWF.ready(function() {
+      $wnd.OWF.Eventing.subscribe(channelName, handler);
+    }, this);
   }-*/;
 
   @Override
   public native void unsubscribe(String channelName) /*-{
-    $wnd.OWF.Eventing.unsubscribe(channelName);
+    $wnd.OWF.ready(function() {
+      $wnd.OWF.Eventing.unsubscribe(channelName);
+    }, this);
   }-*/;
   
   @Override
@@ -346,17 +358,19 @@ if (!OWFWidgetProxy.isReady(dests.get(i))) {
 
   private native void nativeStartActivity(String action, String dataType,
       JavaScriptObject data, JsFunction onReceipt) /*-{
-    $wnd.OWF.Intents.startActivity(
-      {
-        action : action, 
-        dataType : dataType
-      },
-      {
-        data : data
-      },
-      onReceipt
-//    , not passing in desination widget proxies, which is an OWF option
-    );
+    $wnd.OWF.ready(function() {
+      $wnd.OWF.Intents.startActivity(
+        {
+          action : action, 
+          dataType : dataType
+        },
+        {
+          data : data
+        },
+        onReceipt
+  //    , not passing in desination widget proxies, which is an OWF option
+      );
+    }, this);
   }-*/;
   
   @Override
@@ -390,24 +404,26 @@ if (!OWFWidgetProxy.isReady(event.getSender())) {
 //  }
   
   private native void nativeReceive(String action, String dataType, JsFunction listener) /*-{
-    $wnd.OWF.Intents.receive(
-      {
-        action : action,
-        dataType : dataType
-      },
-      function(sender, intent, data) {
-        $wnd.OWF.RPC.getWidgetProxy
-            (sender, function(senderWidgetProxy) {
-          senderWidgetProxy.onReady(function() {
-            listener({
-              senderWidgetProxy : senderWidgetProxy,
-              intent : intent,
-              data : data.data
+    $wnd.OWF.ready(function() {
+      $wnd.OWF.Intents.receive(
+        {
+          action : action,
+          dataType : dataType
+        },
+        function(sender, intent, data) {
+          $wnd.OWF.RPC.getWidgetProxy
+              (sender, function(senderWidgetProxy) {
+            senderWidgetProxy.onReady(function() {
+              listener({
+                senderWidgetProxy : senderWidgetProxy,
+                intent : intent,
+                data : data.data
+              })
             })
           })
-        })
-      }
-    );
+        }
+      );
+    }, this);
   }-*/;
   
   private final static class OWFLogger extends JavaScriptObject implements WidgetLogger {

@@ -10,19 +10,21 @@ import jsfunction.gwt.returns.JsReturn;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArrayMixed;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 
 public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProxy {
   
   protected OWFWidgetProxy() {}
   
   native String getId() /*-{
-    return this.id
+    return this.id;
   }-*/;
-  
   
   @Override
   public native void sendMessage(JavaScriptObject message) /*-{
-    this.sendMessage(message);
+    var widgetProxy = $wnd.OWF.RPC.getWidgetProxy(id);
+    widgetProxy.sendMessage(message);
     
 // This method supports the equivalent of the following JavaScript example:
 //
@@ -45,8 +47,11 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
 //    onReady(JsFunction.create(readyCallback));
 //  }
   
-  static void getWidgetProxy(final String widgetId, final EventListener<WidgetProxy> readyCallback) {
+  static void getWidgetProxy(final String widgetId, final EventListener<OWFWidgetProxy> readyCallback) {
     getWidgetProxy(widgetId, JsFunction.create(readyCallback));
+    
+    // This state listener stuff just doesn't work
+//    registerCloseListener(widgetId);
   }
 //// This method supports the equivalent of the following JavaScript example:
 ////
@@ -63,33 +68,45 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
 //  
   private static native void getWidgetProxy(String widgetId, JsFunction readyCallback) /*-{
     $wnd.OWF.ready(function() {
-      $wnd.OWF.RPC.getWidgetProxy(widgetId, readyCallback);
+      $wnd.OWF.RPC.getWidgetProxy(widgetId, 
+        function(widgetProxy) {
+          widgetProxy.onReady(function() {
+            readyCallback(widgetProxy);
+          });
+        }
+      );
     });
-  }
-//    if ($wnd.OWF.RPC.owfGwtProxyCache === undefined) {
-//      $wnd.OWF.RPC.owfGwtProxyCache = {};
-//    }
-//    var cacheEntry = $wnd.OWF.RPC.owfGwtProxyCache[widgetId];
-//    if (   cacheEntry !== undefined
-//        && cacheEntry.widgetProxy !== null) {
-//      readyCallback(cacheEntry.widgetProxy);
-//    } else {
-//      if (cacheEntry === undefined) {
-//        cacheEntry = $wnd.OWF.RPC.owfGwtProxyCache[widgetId] = {
-//          widgetProxy:null,
-//          readyCallbacks:[]
-//        };
-//      }
-//      cacheEntry.readyCallbacks.push(readyCallback);
-//      $wnd.OWF.RPC.getWidgetProxy(widgetId, function(widgetProxy) {
-//        cacheEntry.widgetProxy = widgetProxy;
-//        var len = cacheEntry.readyCallbacks.length;
-//        for (var i = 0; i < len; i++) {
-//          cacheEntry.readyCallbacks[i](widgetProxy);
+  }-*/;
+  
+//  private static native void registerCloseListener(String widgetId) /*-{
+//    $wnd.OWF.ready(function() {
+//      $wnd.OWF.RPC.getWidgetProxy(widgetId, 
+//        function(widgetProxy) {
+//          widgetProxy.onReady(function() {
+//            var widgetEventingController = $wnd.Ozone.eventing.Widget.getInstance();
+//            var widgetState = $wnd.Ozone.state.WidgetState.getInstance({
+//              // but in my version of OWF... the config param may be ignored
+//              // so you can't rely on the widgetGuid parameter. Instead
+//              // I pass it into the addStateEventListeners method.
+//              widgetEventingController:  widgetEventingController
+//            });
+//            widgetState.addStateEventListeners({
+//              guid: widgetId,
+//              events: ['close'],
+//              callback: function(test) {
+//console.log("close:"+test);
+//                widgetProxy.owfGwtWidgetIsClosed = true;
+//              }
+//            });
+//          });
 //        }
-//        cacheEntry.readyCallbacks = null;
-//      });
-//    }
+//      );
+//    });
+//  }-*/;
+  
+// Can't tell... State listener doesn't work
+//  native boolean isClosed() /*-{
+//    return !!this.owfGwtWidgetIsClosed;
 //  }-*/;
   
   @Override
@@ -118,6 +135,30 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
     return this.id === rhs.id;
   }-*/;
 
+//  void launchAndCall(final String methodName, final JsReturn<JavaScriptObject> resultCallback, final Object... functionArgs) {
+//    nativeLaunch(JsFunction.create(new NoArgsFunction() {
+//      public void callback() {
+//        call(methodName, resultCallback, functionArgs);
+//      }
+//    }));
+//  }
+//  
+//  private native void nativeLaunch(JsFunction callback) /*-{
+//    var widgetProxy = this;
+//    $wnd.OWF.Launcher.launch(
+//      {
+  // FAILS ON THIS WIDGET ID
+//        guid: widgetProxy.id,
+//        launchOnlyIfClosed: true
+//      },
+//      function(response) {
+//        if (!response.error) {
+//          callback();
+//        }
+//      }
+//    );
+//  }-*/;
+  
   /**
    * Designing around an OWF flaw: a proxy method can return a value, but the value is returned to
    * only a single proxy object, and a single callback per proxy method. If the method is called from
@@ -131,6 +172,7 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
    */
   private native void nativeCall(String methodName, JsResultOrError jsResultOrError, JsArrayMixed args) /*-{
     
+    
     // IMPORTANT: I learned it is not guaranteed that you can use the same widgetProxy (from the JavaScript side)
     // for multiple calls; in particular, calls that return values. If you call the same method more than once
     // in a row, it can lose the callback. I couldn't work around it other than to always call getWidgetProxy()
@@ -140,23 +182,26 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
     // (I'm NOT sure it's not needed though.)
     
     var widgetProxy = this;
-    if (jsResultOrError != null) {
-      if (!widgetProxy.scopedCallbacks) {
-        widgetProxy.scopedCallbacks = {};
+//    if (widgetProxy.owfGwtWidgetIsClosed) {
+//      jsResultOrError.error(new Error("Can't call WidgetProxy function on a Widget that is now closed"));
+//    } else {
+      if (jsResultOrError != null) {
+        if (!widgetProxy.scopedCallbacks) {
+          widgetProxy.scopedCallbacks = {};
+        }
+        var scopedCallback = widgetProxy.scopedCallbacks[methodName];
+        if (!scopedCallback) {
+          scopedCallback = function(result) {
+            var scopedCallback = widgetProxy.scopedCallbacks[methodName];
+            scopedCallback.queue[0].result(result) // calling the "result" function from the jsResultOrError
+            scopedCallback.queue.shift()
+          };
+          scopedCallback.queue = []; // start a queue of jsResultOrError objects
+          widgetProxy.scopedCallbacks[methodName] = scopedCallback;
+        }
+        scopedCallback.queue.push(jsResultOrError); // jsResultOrError has properties "result" and "error", that are functions
+        args.push(scopedCallback);
       }
-      var scopedCallback = widgetProxy.scopedCallbacks[methodName];
-      if (!scopedCallback) {
-        scopedCallback = function(result) {
-          var scopedCallback = widgetProxy.scopedCallbacks[methodName];
-          scopedCallback.queue[0].result(result) // calling the "result" function from the jsResultOrError
-          scopedCallback.queue.shift()
-        };
-        scopedCallback.queue = []; // start a queue of jsResultOrError objects
-        widgetProxy.scopedCallbacks[methodName] = scopedCallback;
-      }
-      scopedCallback.queue.push(jsResultOrError); // jsResultOrError has properties "result" and "error", that are functions
-      args.push(scopedCallback);
-    }
 //    if (widgetProxy.isReady) {
 //      if (widgetProxy[methodName]) {
 //        widgetProxy[methodName].apply(widgetProxy, args);
@@ -166,6 +211,9 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
 //        scopedCallback.queue.shift()
 //      }
 //    } else {
+
+// Since the state listener does not work, if sending an intent, attempt to launch
+
       $wnd.OWF.RPC.getWidgetProxy
           (widgetProxy.id, function(readyWidgetProxy) {
         if (widgetProxy.scopedCallbacks && !readyWidgetProxy.scopedCallbacks) {
@@ -179,16 +227,18 @@ public final class OWFWidgetProxy extends JavaScriptObject implements WidgetProx
           scopedCallback.queue.shift()
         }
       });
-    //}
+//    }
+//    }
   }-*/;
 
-  public void onReady(NoArgsFunction noArgsFunction) {
-    onReady(JsFunction.create(noArgsFunction));
-  }
-
-  private native void onReady(JsFunction create) /*-{
-    this.onReady(create);
-  }-*/;
+// I don't want to have to need these.  OWF-GWT should only provide ready proxies with no need to check
+//  public void onReady(NoArgsFunction widgetProxyReady) {
+//    onReady(JsFunction.create(widgetProxyReady));
+//  }
+//
+//  private native void onReady(JsFunction widgetProxyReady) /*-{
+//    this.onReady(widgetProxyReady);
+//  }-*/;
 
   // Just for internal inspection
   static native boolean isReady(WidgetProxy sender) /*-{

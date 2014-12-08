@@ -10,6 +10,8 @@ import com.google.gwt.user.client.ui.RootPanel;
 
 public abstract class WidgetFramework {
   
+  protected static final String OWF_GWT_INTENTS_MAP_GLOBALVAR = "__OwfGwtIntentsMap";
+  
   private static WidgetFramework widgetFramework;
   
   public static WidgetFramework getInstance() {

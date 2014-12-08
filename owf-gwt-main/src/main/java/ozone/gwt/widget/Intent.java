@@ -8,6 +8,8 @@ public abstract class Intent<T extends JavaScriptObject> {
   
   private WidgetHandle widgetHandle;
 
+  private boolean autoReceive = true;
+
   public Intent(WidgetHandle widgetHandle) {
     Class<?> subclass = getClass();
     while (getSimpleName(subclass).indexOf('$') >= 0) { 
@@ -16,6 +18,7 @@ public abstract class Intent<T extends JavaScriptObject> {
     action = getSimpleName(subclass);
 
     this.widgetHandle = widgetHandle;
+    widgetHandle.addIntent(this);
   }
   
   /**
@@ -26,6 +29,10 @@ public abstract class Intent<T extends JavaScriptObject> {
   private static String getSimpleName(Class<?> clazz) {
     String name = clazz.getName();
     return name.substring(name.lastIndexOf(".")+1); // strip the package name
+  }
+  
+  public IntentDescriptor getIntentDescriptor() {
+    return IntentDescriptor.create(getAction(), getDataType());
   }
   
   /**
@@ -64,7 +71,20 @@ public abstract class Intent<T extends JavaScriptObject> {
   @Override
   public boolean equals(Object rhs) {
     return rhs instanceof Intent
-      && getAction().equals(((Intent)rhs).getAction()) 
-      && getDataType().equals(((Intent)rhs).getDataType());
+      && getAction().equals(((Intent<?>)rhs).getAction()) 
+      && getDataType().equals(((Intent<?>)rhs).getDataType());
+  }
+
+  /**
+   * Defaults to true. Call receive() automatically, deferred until the next JavaScript event loop.
+   */
+  @SuppressWarnings("unchecked")
+  public <S extends Intent<?>> S setAutoReceive(boolean autoReceive) {
+    this.autoReceive = false;
+    return (S) this;
+  }
+  
+  public boolean isAutoReceive() {
+    return autoReceive;
   }
 }

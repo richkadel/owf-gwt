@@ -10,11 +10,14 @@ public abstract class StringChannel extends EventingChannel {
 
   protected abstract void messageReceived(WidgetProxy sender, String message);
     
-  public void subscribe() {
+  @SuppressWarnings("unchecked")
+  @Override
+  public <S extends EventingChannel> S subscribe() {
     getWidgetHandle().subscribe(getChannelName(), new EventListener<StringMessage>() {
       public void callback(StringMessage event) {
         messageReceived(event.getSender(), event.getMessage());
       }
     });
+    return (S) this;
   }
 }

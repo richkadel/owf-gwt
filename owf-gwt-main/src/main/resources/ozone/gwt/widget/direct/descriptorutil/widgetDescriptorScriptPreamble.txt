@@ -35,12 +35,17 @@ if [ $# == 0 ]; then
   echo 
   echo "appParams are in URL parameter format: ?<name>=<value[\\&<name>=<value>...]"
   echo "  srctype=debug (include non-obfuscated debug versions of scripts when possible)"
-  echo "  superdevmode=true (load widgets in superdevmode;"
+  echo "  superdevmode=true (load widgets in superdevmode)"
   echo "    set widget title bar refresh button to recompile source from local codeServer)"
+  echo "  useintentsmap=true (don't use OWF intents, rather use the intentsMap.js in the"
+  echo "    widget descriptor directory to send intents to specific widgets, to avoid"
+  echo "    laborious widget intent configuration when only one widget is responding to"
+  echo "    a given event)"
+  echo "  logenabled=true (enable OWF log4javascript, which may pop up a window as needed)"
   echo
   echo "Examples:"
-  echo "  $0 https://raconteur.combat.mil:8443/sapphire-jboss/" 'combatwidgets/'
-  echo "  $0 http://localhost:8888/ 'debugwidgets/' '?srctype=debug\\&superdevmode=true'"
+  echo "  $0 https://raconteur.combat.mil:8443/sapphire-jboss/" combatwidgets/ '?useintentsmap=true'
+  echo "  $0 http://localhost:8888/ debugwidgets/ '?srctype=debug\\&superdevmode=true\\&logenabled=true'"
   echo
   echo "  ** Important: Note the backslash in front of the ampersand (\\&) in the second"
   echo "                example. These parameters are sed regex replacement strings,"
@@ -51,6 +56,12 @@ fi
 appUrlPrefix=$1
 descriptorDir=$2
 appParams=$3
+
+if [ -z "$appParams" ]; then
+  appParams="?intentsMap=${descriptorDir}intentsMap.js"
+else
+  appParams=${appParams}"\\&intentsMap=${descriptorDir}intentsMap.js"
+fi
    
 rm -rf /tmp/widgetdescriptors
 mkdir /tmp/widgetdescriptors

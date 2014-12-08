@@ -13,8 +13,11 @@ public abstract class JavaScriptObjectChannel<T extends JavaScriptObject> extend
 
   protected abstract void messageReceived(WidgetProxy sender, T message);
   
+//  public <S extends JavaScriptObjectChannel<T>> S subscribe() {
+  
   @SuppressWarnings("unchecked")
-  public <S extends JavaScriptObjectChannel<T>> S subscribe() {
+  @Override
+  public <S extends EventingChannel> S subscribe() {
     getWidgetHandle().subscribe(getChannelName(), new EventListener<StringMessage>() {
       public void callback(StringMessage event) {
         messageReceived(event.getSender(), JsonUtils.safeEval(event.getMessage()).<T>cast());

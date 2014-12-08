@@ -5,6 +5,8 @@ public abstract class EventingChannel {
   private WidgetHandle widgetHandle;
 
   private String channelName;
+
+  private boolean autoSubscribe = true;
   
   protected EventingChannel(WidgetHandle widgetHandle) {
     Class<?> subclass = getClass();
@@ -14,6 +16,7 @@ public abstract class EventingChannel {
     channelName = subclass.getName();
     
     this.widgetHandle = widgetHandle;
+    widgetHandle.addEventingChannel(this);
   }
   
   protected WidgetHandle getWidgetHandle() {
@@ -24,7 +27,22 @@ public abstract class EventingChannel {
     return channelName;
   }
   
+  public abstract <S extends EventingChannel> S subscribe();
+  
   public void unsubscribe() {
     widgetHandle.unsubscribe(channelName);
+  }
+
+  /**
+   * Defaults to true. Call subscribe() automatically, deferred until the next JavaScript event loop.
+   */
+  @SuppressWarnings("unchecked")
+  public <S extends EventingChannel> S setAutoSubscribe(boolean autoSubscribe) {
+    this.autoSubscribe = false;
+    return (S) this;
+  }
+  
+  public boolean isAutoSubscribe() {
+    return autoSubscribe;
   }
 }

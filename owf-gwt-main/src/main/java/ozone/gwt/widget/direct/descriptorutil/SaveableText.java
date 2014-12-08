@@ -12,6 +12,14 @@ public final class SaveableText extends JavaScriptObject {
     }
   }-*/;
     
+  public static native String stringify(JavaScriptObject jso) /*-{
+    return JSON.stringify(jso);
+  }-*/;
+
+  public static native String stringifyPretty(JavaScriptObject jso) /*-{
+    return JSON.stringify(jso, null, '\t');
+  }-*/;
+
   public native void saveAs(String filename) /*-{
     
     // I know re-creating this saveAs script is not efficient in a method, but

@@ -2,35 +2,47 @@ package ozone.gwt.widget.owf;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
+import ozone.gwt.widget.DirectLogger;
+import ozone.gwt.widget.EventingChannel;
 import ozone.gwt.widget.Intent;
 import ozone.gwt.widget.OnReceipt;
 import ozone.gwt.widget.StringMessage;
 import ozone.gwt.widget.WidgetContainer;
+import ozone.gwt.widget.WidgetDescriptor;
 import ozone.gwt.widget.WidgetFramework;
 import ozone.gwt.widget.WidgetHandle;
 import ozone.gwt.widget.WidgetLogger;
 import ozone.gwt.widget.WidgetProxy;
 import ozone.gwt.widget.WidgetProxyFunction;
 import ozone.gwt.widget.WidgetProxyFunctions;
+import ozone.gwt.widget.direct.descriptorutil.SaveableText;
 import jsfunction.gwt.JsFunction;
 import jsfunction.gwt.JsFunctionUtils;
 import jsfunction.gwt.functions.EventListener;
 import jsfunction.gwt.functions.NoArgsFunction;
 import jsfunction.gwt.functions.VarArgsFunction;
+import jsfunction.gwt.functions.VarArgsFunctionReturn;
+import jsfunction.gwt.returns.JsReturn;
+import jsfunction.gwt.types.JsError;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.JsArrayMixed;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.ui.IsWidget;
-//import com.harmonia.sapphire.client.MessageHandler;
-//import com.harmonia.sapphire.client.Sapphire;
 
 public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandle { 
   
   private static final Logger log = Logger.getLogger(OZONEWidgetFramework.class.getName());
+
+  private static final String INTENT_FROM_MAP = "owfGwtIntentFromMap";
   
   private static boolean isReady = false;
   
@@ -38,9 +50,26 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
 
   private OWFWidgetState widgetState;
   
-  private OWFLogger owfLogger = OWFLogger.create();
+  private IntentsMap intentsMap;
+  
+  private WidgetLogger owfLogger = new DirectLogger();;
+  
+  private String universalName;
 
   private List<Intent<?>> intentsReceived = new ArrayList<Intent<?>>();
+
+  private Map<String,String> universalNameToWidgetId = new HashMap<String,String>();
+  
+  private Map<String,OWFWidgetProxy> universalNameToWidgetProxy = new HashMap<String,OWFWidgetProxy>();
+  
+  private Map<String,Intent<?>> intentsMapKeyToIntent = new HashMap<String,Intent<?>>();
+  
+  private List<Intent<?>> intentsAdded = new LinkedList<Intent<?>>();
+  private List<EventingChannel> channelsAdded = new LinkedList<EventingChannel>();
+
+  private boolean autoNotifyWidgetReady = true;
+
+  private boolean notifiedWidgetReady;
 
   public static native boolean isRunningInOWF() /*-{
     if (window.parent.name.indexOf("preferenceLocation\":\"") > 0) {
@@ -51,9 +80,33 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
   }-*/;
   
   protected OZONEWidgetFramework() {
-    widgetState = getWidgetState();
+    onReady(new NoArgsFunction() {
+      public void callback() {
+        if (isLogEnabled()) {
+          owfLogger = OWFLogger.create();
+        }
+        widgetState = getWidgetState();
+        intentsMap = getIntentsMap(OWF_GWT_INTENTS_MAP_GLOBALVAR);
+        // create default widget proxy function
+        registerWidgetProxyFunctions(new WidgetProxyFunctions(), false);
+      }
+    });
   }
   
+  private void onReady(NoArgsFunction callback) {
+    nativeOnReady(JsFunction.create(callback));
+  }
+
+  private native void nativeOnReady(JsFunction callback) /*-{
+    $wnd.OWF.ready(function() {
+      callback();
+    }, this);
+  }-*/;
+
+  private native IntentsMap getIntentsMap(String globalVarName) /*-{
+    return $wnd[globalVarName];
+  }-*/;
+
 //  @Override
 //  public void addSaveWidgetCallback(NoArgsFunction callback) {
 //    addWidgetHeaderButton("save", callback);
@@ -162,6 +215,7 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
       throw new Error("OZONEWidgetFramework does allow multiple gwtIsWidgets to be the OWF WidgetHandles for a single OZONE Widget");
     }
     this.gwtIsWidget = gwtIsWidget;
+    universalName = WidgetDescriptor.makeUniversalName(this);
     return this;
   }
 
@@ -178,6 +232,10 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
     return owfLogger;
   }
   
+  private native boolean isLogEnabled() /*-{
+    return $wnd.Ozone.log.logEnabled;
+  }-*/;
+  
   @Override
   public void activate() {
     widgetState.activateWidget();
@@ -185,7 +243,10 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
 
   @Override
   public void notifyWidgetReady() {
-    nativeNotifyWidgetReady();
+    if (!notifiedWidgetReady) {
+      notifiedWidgetReady = true;
+      nativeNotifyWidgetReady();
+    }
   }
 
   public native void nativeNotifyWidgetReady() /*-{
@@ -202,7 +263,7 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
   @Override
   public void handleDirectMessage(
       EventListener<JavaScriptObject> directMessageCallback) {
-    
+    ensureNotifyWidgetReadyCheck();
     handleDirectMessage(JsFunction.create(directMessageCallback));
     
 // This method supports the equivalent of the following JavaScript example:
@@ -220,6 +281,31 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
 
   @Override
   public void registerWidgetProxyFunctions(WidgetProxyFunctions widgetProxyFunctions) {
+    registerWidgetProxyFunctions(widgetProxyFunctions, true); // this should queue up notifyWidgetReady
+  }
+
+  public void registerWidgetProxyFunctions(WidgetProxyFunctions widgetProxyFunctions, boolean fromApp) {
+    if (fromApp) {
+      ensureNotifyWidgetReadyCheck();
+    }
+    widgetProxyFunctions.add(INTENT_FROM_MAP, new VarArgsFunctionReturn<JavaScriptObject>() {
+      public JavaScriptObject callback(JsArrayMixed args) {
+        String senderWidgetId = args.getString(0);
+        String intentsMapKey = args.getString(1);
+        final JavaScriptObject data = args.getObject(2).cast();
+        final Intent<?> intent = intentsMapKeyToIntent.get(intentsMapKey);
+        if (intent == null) {
+          return null; // null is our marker that the requested intent is not registered to be received by this widget
+        } else {
+          OWFWidgetProxy.getWidgetProxy(senderWidgetId, new EventListener<OWFWidgetProxy>() {
+            public void callback(OWFWidgetProxy senderWidgetProxy) {
+              intent.coercedIntentReceived(senderWidgetProxy, data);
+            }
+          });
+          return JavaScriptObject.createObject(); // non-null means the intent for the given intentsMapKey was received
+        }
+      }
+    });
     this.nativeRegisterWidgetProxyFunctions(widgetProxyFunctions.toJsArray());
   }
   
@@ -263,9 +349,10 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
 //        ]);
   }-*/;
 
-  public void message(String title, String messageText) {
-    owfLogger.info(title+": "+messageText);
-  }
+//  @Override
+//  public void message(String title, String messageText) {
+//    owfLogger.info(title+": "+messageText);
+//  }
 
   @Override
   public void publish(String channelName, String message, WidgetProxy dest) {
@@ -276,7 +363,8 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
     publish(channelName, message, destWidgetId);
   }
   
-  public native void publish(String channelName, String message, String destWidgetId) /*-{
+  private native void publish(String channelName, String message, String destWidgetId) /*-{
+    // This assumes destWidgetId is READY.  Safest to use the public method above with a valid WidgetProxy
     $wnd.OWF.ready(function() {
       if (destWidgetId) {
         $wnd.OWF.Eventing.publish(channelName, message, destWidgetId);
@@ -288,20 +376,17 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
 
   @Override
   public void subscribe(String channelName, final EventListener<StringMessage> handler) {
+    ensureNotifyWidgetReadyCheck();
     subscribe(
       channelName, 
       JsFunction.create(new VarArgsFunction() {
         public void callback(final JsArrayMixed args) {
           String senderWidgetId = args.getString(0);
-          OWFWidgetProxy.getWidgetProxy(senderWidgetId, new EventListener<WidgetProxy>() {
-            public void callback(final WidgetProxy sender) {
-//              sender.onReady(new NoArgsFunction() {
-//                public void callback() {
-                  String message = args.getString(1);
-                  handler.callback(new StringMessage(sender, message)); // ignore third parameter, channel name
-                }
-//              });
-//            }
+          OWFWidgetProxy.getWidgetProxy(senderWidgetId, new EventListener<OWFWidgetProxy>() {
+            public void callback(final OWFWidgetProxy sender) {
+              String message = args.getString(1);
+              handler.callback(new StringMessage(sender, message)); // ignore third parameter, channel name
+            }
           });
         }
       })
@@ -322,39 +407,206 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
   }-*/;
   
   @Override
-  public void startActivity(Intent<?> intent, JavaScriptObject data, final OnReceipt onReceipt) {
-    JsFunction receiptFunction = null;
-    if (onReceipt != null) {
-      receiptFunction = JsFunction.create(
-        new EventListener<JsArray<OWFWidgetProxy>>() {
-          @Override
-          public void callback(JsArray<OWFWidgetProxy> dests) {
-            int len = dests.length();
-            for (int i = 0; i < len; i++) {
-              
-//              callWhenReady(onReceipt, dests.get(i));
-// These should already be "ready" proxies
-if (!OWFWidgetProxy.isReady(dests.get(i))) {
-  throw new Error("Given WidgetProxy is not ready! It should be. Wrap in OWFWidgetProxy.getWidgetProxy() callback method before returning.");
-}
-// I can remove this check after some testing
-              onReceipt.intentReceived(dests.get(i));
-            }
-          }
-        }
-      );
-    }
-    nativeStartActivity(intent.getAction(), intent.getDataType(), data, receiptFunction);
+  public void startActivity(final Intent<?> intent, final JavaScriptObject data, final OnReceipt onReceipt) {
+    startActivity(intent, data, onReceipt, false);
   }
   
-// I can remove this method after some testing
-//  private void callWhenReady(final OnReceipt onReceipt, final OWFWidgetProxy owfWidgetProxy) {
-//    owfWidgetProxy.onReady(new NoArgsFunction() {
-//      public void callback() {
-//        onReceipt.intentReceived(owfWidgetProxy);
-//      }
-//    });
-//  }
+  public void startActivity(final Intent<?> intent, final JavaScriptObject data, final OnReceipt onReceipt, final boolean secondAttempt) {
+    
+    final String intentsMapKey = SaveableText.stringify(intent.getIntentDescriptor());
+    final String directRecipient = getDirectRecipientName(intentsMapKey);
+    
+    if (directRecipient != null) {
+      getWidgetProxyFromUniversalName(directRecipient, new EventListener<OWFWidgetProxy>() {
+        public void callback(final OWFWidgetProxy widgetProxy) {
+          if (widgetProxy == null) {
+            if (onReceipt != null) {
+              onReceipt.intentNotReceived();
+            }
+          } else {
+            String universalId = universalNameToWidgetId.get(directRecipient);
+            launchWidget(universalId, new EventListener<OWFLaunchResponse>() {
+              public void callback(OWFLaunchResponse response) {
+                if (response.isError()) {
+                  log.warning("Error launching widget "+directRecipient+" for Intent "+intentsMapKey);
+                } else {
+                  if (response.getNewWidgetLaunched()) {
+                    universalNameToWidgetProxy.remove(directRecipient);
+                    // Need to re-get the proxy and try again
+                    startActivity(intent, data, onReceipt, true);
+                  } else {
+                    widgetProxy.call(
+                      INTENT_FROM_MAP, 
+                      new JsReturn<JavaScriptObject>() {
+                        public void onReturn(JavaScriptObject returnValue) {
+                          if (onReceipt != null) {
+                            if (returnValue == null) { // null is our marker that the intentsMapKey did not match a received intent
+                              onReceipt.intentNotReceived();
+                            } else {
+                              onReceipt.intentReceived(widgetProxy);
+                            }
+                          }
+                        }
+        
+                        public void onError(JsError jsError) {
+                          universalNameToWidgetProxy.remove(directRecipient);
+                          if (secondAttempt) {
+                            onReceipt.intentNotReceived();
+                          } else {
+                            // try again but we'll need to re-get the proxy
+                            startActivity(intent, data, onReceipt, true);
+                          }
+                        }
+                      },
+                      getWidgetState().getWidgetGuid(),
+                      intentsMapKey,
+                      data
+                    );
+                  }
+                }
+              }
+            });
+          }
+        }
+      });
+    } else {
+      JsFunction receiptFunction = null;
+      if (onReceipt != null) {
+        receiptFunction = JsFunction.create(
+          new EventListener<JsArray<OWFWidgetProxy>>() {
+            @Override
+            public void callback(JsArray<OWFWidgetProxy> dests) {
+              int len = dests.length();
+              if (len == 0) {
+                onReceipt.intentNotReceived();
+              } else {
+                for (int i = 0; i < len; i++) {
+                  // These should already be "ready" proxies
+                  if (!OWFWidgetProxy.isReady(dests.get(i))) {
+                    throw new Error("Given WidgetProxy is not ready! It should be. Wrap in OWFWidgetProxy.getWidgetProxy() callback method before returning.");
+                  }
+                  onReceipt.intentReceived(dests.get(i));
+                }
+              }
+            }
+          }
+        );
+      }
+      nativeStartActivity(intent.getAction(), intent.getDataType(), data, receiptFunction);
+    }
+  }
+  
+  public void launchWidget(String widgetId, EventListener<OWFLaunchResponse> responseListener) {
+    launchWidget(widgetId, null, responseListener);
+  }
+  
+  public void launchWidget(String widgetId, String data, EventListener<OWFLaunchResponse> responseListener) {
+    JsFunction responseListenerFunc = null;
+    if (responseListener != null) {
+      responseListenerFunc = JsFunction.create(responseListener);
+    }
+    nativeLaunchWidget(widgetId, data, responseListenerFunc);
+  }
+
+  private native void nativeLaunchWidget(String widgetId, String data, JsFunction responseListener) /*-{
+    $wnd.OWF.Launcher.launch(
+      {
+        guid: widgetId,
+        launchOnlyIfClosed: true,
+        data: data
+      },
+      function(response) { // Object {error: false, newWidgetLaunched: false, message: "An instance of the specified widget already exists.", uniqueId: "6aa6a53c-5d78-e08a-7459-0354af458d12"}
+        // The documentation doesn't say this function is optional, so I will implement it
+        if (responseListener) {
+          responseListener(response);
+        }
+      }
+    );
+  }-*/;
+
+  /**
+   * @param universalName
+   * @param returnWidgetId may return null if not found/registered
+   */
+  private void getWidgetIdFromUniversalName(final String universalName,
+      final EventListener<String> returnWidgetId) {
+    String widgetId = universalNameToWidgetId.get(universalName);
+    if (widgetId != null) {
+      returnWidgetId.callback(widgetId);
+    } else {
+      nativeUniversalNameToWidgetId(universalName, 
+        JsFunction.create(new EventListener<String>() {
+          public void callback(String widgetId) {
+            universalNameToWidgetId.put(universalName, widgetId);
+            returnWidgetId.callback(widgetId);
+          }
+        })
+      );
+    }
+  }
+
+  /**
+   * @param universalName
+   * @param returnWidgetProxy may return null if not found/registered
+   */
+  private void getWidgetProxyFromUniversalName(final String universalName,
+      final EventListener<OWFWidgetProxy> returnWidgetProxy) {
+    getWidgetProxyFromUniversalName(universalName, returnWidgetProxy, false);
+  }
+
+  /**
+   * @param universalName
+   * @param returnWidgetProxy may return null if not found/registered
+   */
+  private void getWidgetProxyFromUniversalName(final String universalName,
+      final EventListener<OWFWidgetProxy> returnWidgetProxy, final boolean secondAttempt) {
+    
+    OWFWidgetProxy widgetProxy = universalNameToWidgetProxy.get(universalName);
+    if (widgetProxy != null) { // && !widgetProxy.isClosed()) { // OWF state listener bug... I can't tell if closed or not
+      returnWidgetProxy.callback(widgetProxy);
+    } else {
+      getWidgetIdFromUniversalName(universalName, new EventListener<String>() {
+        public void callback(final String widgetId) {
+          if (widgetId == null) {
+            returnWidgetProxy.callback(null);
+          } else {
+            launchWidget(widgetId, new EventListener<OWFLaunchResponse>() {
+              public void callback(OWFLaunchResponse response) {
+                if (response.isError()) {
+                  universalNameToWidgetId.remove(universalName);
+                  if (secondAttempt) {
+                    returnWidgetProxy.callback(null);
+                  } else {
+                    // try again but we'll need to re-get the widgetId
+                    getWidgetProxyFromUniversalName(universalName, returnWidgetProxy, true);
+                  }
+                } else {
+                  OWFWidgetProxy.getWidgetProxy(response.getUniqueWidgetId(), new EventListener<OWFWidgetProxy>() {
+                    public void callback(OWFWidgetProxy widgetProxy) {
+                      universalNameToWidgetProxy.put(universalName, widgetProxy);
+                      returnWidgetProxy.callback(widgetProxy);
+                    }
+                  });
+                }
+              }
+            });
+          }
+        }
+      });
+    }
+  }
+
+  private native void nativeUniversalNameToWidgetId(String universalName, JsFunction returnWidgetId) /*-{
+    $wnd.OWF.Preferences.getWidget({
+      universalName: universalName,
+      onSuccess: function(result) {
+        returnWidgetId(result.path); // guid is not there, but path and id are
+      },
+      onFailure: function(err) { 
+        returnWidgetId(null);
+      }
+    });
+  }-*/;
 
   private native void nativeStartActivity(String action, String dataType,
       JavaScriptObject data, JsFunction onReceipt) /*-{
@@ -373,35 +625,55 @@ if (!OWFWidgetProxy.isReady(dests.get(i))) {
     }, this);
   }-*/;
   
-  @Override
-  public void receive(final Intent<?> intent) {
-    intentsReceived.add(intent);
-    nativeReceive(
-      intent.getAction(),
-      intent.getDataType(),
-      JsFunction.create(new EventListener<IntentReceived>() {
-        @Override
-        public void callback(IntentReceived event) {
-//          callWhenReady(intent, event.getSender(), event.getData());
-// sender should already be a "ready" proxy
-if (!OWFWidgetProxy.isReady(event.getSender())) {
-  throw new Error("Given WidgetProxy is not ready! It should be. Wrap in OWFWidgetProxy.getWidgetProxy() callback method before returning.");
-}
-// I can remove this check after some testing
-          intent.coercedIntentReceived(event.getSender(), event.getData());
-        }
-      })
-    );
+  private String getDirectRecipientName(String stringifiedIntent) {
+    if (intentsMap != null) {
+      return intentsMap.getWidgetUniversalName(stringifiedIntent);
+    }
+    return null;
   }
   
-// I can remove this method after some testing
-//  private void callWhenReady(final Intent<?> intent, final WidgetProxy sender, final JavaScriptObject data) {
-//    sender.onReady(new NoArgsFunction() {
-//      public void callback() {
-//        intent.coercedIntentReceived(sender, data);
-//      }
-//    });
-//  }
+  private boolean universalNameIsMe(String directRecipient) {
+    if (this.universalName.equals(directRecipient)) {
+      return true;
+    } else {
+      int firstDot = directRecipient.indexOf('.');
+      if (firstDot >= 0) {
+        directRecipient = directRecipient.substring(firstDot+1);
+      }
+      if (this.universalName.equals(directRecipient)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  
+  @Override
+  public void receive(final Intent<?> intent) {
+    ensureNotifyWidgetReadyCheck();
+    
+    String intentsMapKey = SaveableText.stringify(intent.getIntentDescriptor());
+    String directRecipient = getDirectRecipientName(intentsMapKey);
+    
+    if (directRecipient != null && universalNameIsMe(directRecipient)) {
+      intentsMapKeyToIntent.put(intentsMapKey, intent);
+    } else {
+      intentsReceived.add(intent);
+      nativeReceive(
+        intent.getAction(),
+        intent.getDataType(),
+        JsFunction.create(new EventListener<IntentReceived>() {
+          @Override
+          public void callback(IntentReceived event) {
+            // sender should already be a "ready" proxy
+            if (!OWFWidgetProxy.isReady(event.getSender())) {
+              throw new Error("Given WidgetProxy is not ready! It should be. Wrap in OWFWidgetProxy.getWidgetProxy() callback method before returning.");
+            }
+            intent.coercedIntentReceived(event.getSender(), event.getData());
+          }
+        })
+      );
+    }
+  }
   
   private native void nativeReceive(String action, String dataType, JsFunction listener) /*-{
     $wnd.OWF.ready(function() {
@@ -513,5 +785,75 @@ if (!OWFWidgetProxy.isReady(event.getSender())) {
   @Override
   public Collection<Intent<?>> getIntentsReceived() {
     return intentsReceived;
+  }
+
+  @Override
+  public void addIntent(Intent<?> intent) {
+    intentsAdded.add(intent);
+    Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+      public void execute() {
+        while (intentsAdded.size() > 0) {
+          Intent<?> intent = intentsAdded.remove(0);
+          if (intent.isAutoReceive()) {
+            intent.receive();
+          }
+        }
+      }
+    });
+  }
+
+  @Override
+  public void addEventingChannel(EventingChannel channel) {
+    channelsAdded.add(channel);
+    Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+      public void execute() {
+        while (channelsAdded.size() > 0) {
+          EventingChannel channel = channelsAdded.remove(0);
+          if (channel.isAutoSubscribe()) {
+            channel.subscribe();
+          }
+        }
+      }
+    });
+  }
+  
+  public void ensureNotifyWidgetReadyCheck() {
+    if (!notifiedWidgetReady) {
+      Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+        public void execute() {
+          if (autoNotifyWidgetReady) {
+            notifyWidgetReady();
+          }
+        }
+      });
+    }
+  }
+
+  /**
+   * Defaults to true. Call notifyWidgetReady() automatically, after at least one Intent,
+   * WidgetProxyFunction, or EventingChannel is registered, deferred until the next JavaScript event loop.
+   */
+  public void setAutoNotifyWidgetReady(boolean autoNotifyWidgetReady) {
+    this.autoNotifyWidgetReady = false;
+  }
+  
+  public boolean isAutoNotifyWidgetReady() {
+    return autoNotifyWidgetReady;
+  }
+
+  /**
+   * Defaults to true.
+   * This must be called right after OZONEWidgetFramework construction, or in other words, 
+   * after the first call to WidgetFramework.getInstance(). 
+   * If false, and IntentsMap is available, force it off (and default to normal Widget Intents
+   * behavior).
+   * If this method is not called, the intents map can only be used if provided in
+   * the widget descriptor parameters.
+   * @param useIntentsMap
+   */
+  public void setUseIntentsMap(boolean useIntentsMap) {
+    if (!useIntentsMap) {
+      this.intentsMap = null;
+    }
   }
 }

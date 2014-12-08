@@ -35,6 +35,7 @@
     thisScript = scripts[scripts.length - 1],
     params,
     server_url,
+    docpath,
     docroot,
     appname,
     srctype,
@@ -45,7 +46,7 @@
     appendJavascript,
     showError,
     appendCss,
-    checkStartdevmodescript,
+    owfScriptLoaded,
     widgetState;
 
   parseQuery = function(url) {
@@ -89,8 +90,12 @@
     document.getElementsByTagName('head')[0].appendChild(s);
   };
 
-  checkStartdevmodescript = function() {
+  owfScriptLoaded = function() {
     
+    if (params.logenabled) {
+      Ozone.log.logEnabled = true;
+    }
+      
     OWF.ready(function() {
 
       var widgetEventingController = Ozone.eventing.Widget.getInstance();
@@ -176,7 +181,8 @@
 
   server_url = 'http://localhost:9876/';
 
-  docroot = params.docroot;
+  docpath = window.location.pathname;
+  docroot = window.location.protocol+"//"+window.location.host+docpath.substring(0,docpath.lastIndexOf('/'))+"/";
 
   appname = params.appname;
 
@@ -203,13 +209,6 @@
     }
   }
 
-  if (docroot === undefined) {
-    docroot = ""; // assume paths are relative to the enclosing HTML file
-                  // (the file that embedded this script)
-  } else if (docroot.length > 0 && docroot.charAt(docroot.length-1) !== '/') {
-    docroot += "/";
-  }
-
   // Need reset.css for GXT support if this is a GXT app
   appendCss(docroot+appname+"/reset.css");
   
@@ -228,7 +227,10 @@
 
   if (window.name !== undefined && window.name !== "") { 
     // assume we are running in OWF
+    if (params.useintentsmap) {
+      appendJavascript(docroot+params.intentsMap);
+    }
     appendCss(docroot+"owf/css/dragAndDrop.css");
-    appendJavascript(docroot+"owf/js-min/owf-widget-"+srctype+".js", checkStartdevmodescript);
+    appendJavascript(docroot+"owf/js-min/owf-widget-"+srctype+".js", owfScriptLoaded);
   }
 }());

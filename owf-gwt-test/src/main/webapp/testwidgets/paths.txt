@@ -1,0 +1,6 @@
+http://localhost:8888/testwidgets/DocumentTree.html
+http://localhost:8888/testwidgets/TableForm.html
+http://localhost:8888/testwidgets/TableView.html
+http://localhost:8888/testwidgets/WebForm.html
+http://localhost:8888/testwidgets/WebView.html
+http://localhost:8888/testwidgets/intentsMap.js

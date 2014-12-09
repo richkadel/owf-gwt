@@ -2,10 +2,10 @@
 <!DOCTYPE module PUBLIC "-//Google Inc.//DTD Google Web Toolkit 2.6.1//EN" 
 "http://google-web-toolkit.googlecode.com/svn/tags/2.6.1/distro-source/core/src/gwt-module.dtd">
 
-<module rename-to='owfgwttest'>
+<module rename-to='TableView'>
 
  <inherits name="ozone.gwt.defaults" />
  
- <entry-point class="ozone.gwt.owfgwttest.directcontainers.Dock"></entry-point>
+ <entry-point class="ozone.gwt.owfgwttest.widgets.TableView"></entry-point>
   
 </module>

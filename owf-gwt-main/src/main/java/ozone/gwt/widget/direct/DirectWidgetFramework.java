@@ -128,12 +128,12 @@ public class DirectWidgetFramework extends WidgetFramework {
     return script.toString();
   }
 
-  public String saveDescriptors(String prefix) {
-    String script = getWidgetDescriptorGeneratorScript("SAPPHIRE", prefix);
+  public String saveDescriptors(String displayGroupName, String prefix) {
     String filename = "mkdesc.sh";
     if (prefix != null) {
       filename = prefix+"-"+filename;
     }
+    String script = getWidgetDescriptorGeneratorScript(displayGroupName, prefix);
     SaveableText.create(script).saveAs(filename);
     return "Your browser should be downloading a script that will create OWF widget \n"
         + "descriptor files for all widgets active in this DirectWidgetFramework.\n"
@@ -149,9 +149,9 @@ public class DirectWidgetFramework extends WidgetFramework {
 
   private native void registerJavaScriptGlobals() /*-{
     var outerThis = this;
-    $wnd.__OwfGwtSaveDescriptors = function(prefix) {
-      return outerThis.@ozone.gwt.widget.direct.DirectWidgetFramework::saveDescriptors(Ljava/lang/String;)(prefix)
+    $wnd.__OwfGwtSaveDescriptors = function(displayGroupName, prefix) {
+      return outerThis.@ozone.gwt.widget.direct.DirectWidgetFramework::saveDescriptors(Ljava/lang/String;Ljava/lang/String;)(displayGroupName, prefix)
     }
-    console.log("The global function __OwfGwtSaveDescriptors([prefix]) is available to generate OWF descriptor files.");
+    console.log("The global function __OwfGwtSaveDescriptors([displayGroupName[, prefix]]) is available to generate OWF descriptor files.");
   }-*/;
 }

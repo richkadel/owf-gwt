@@ -46,7 +46,7 @@ public final class WidgetDescriptor extends JavaScriptObject {
     }
     displayName.append(widgetName.charAt(widgetName.length()-1));
     
-    if (displayGroupName != null) {
+    if (displayGroupName != null && displayGroupName.trim().length() > 0) {
       displayName.append(" - ");
       displayName.append(displayGroupName);
     }

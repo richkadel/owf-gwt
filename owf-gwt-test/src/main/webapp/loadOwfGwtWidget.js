@@ -209,9 +209,6 @@
     }
   }
 
-  // Need reset.css for GXT support if this is a GXT app
-  appendCss(docroot+appname+"/reset.css");
-  
   if (document.title && document.title !== "") {
     document.title = appname+" - "+document.title;
   } else {

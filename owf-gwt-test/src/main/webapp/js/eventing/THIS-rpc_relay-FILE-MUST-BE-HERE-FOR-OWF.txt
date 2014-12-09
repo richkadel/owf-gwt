@@ -1,0 +1,5 @@
+The rpc_relay.uncompressed.html file must be placed at 
+
+<webapp>/js/eventing/rpc_relay.uncompressed.html 
+
+for OZONE Widget Framework inter-widget communication and Widget Intents to work.

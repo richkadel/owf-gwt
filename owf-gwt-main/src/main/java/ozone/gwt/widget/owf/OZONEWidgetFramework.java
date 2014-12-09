@@ -355,6 +355,11 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
 //  }
 
   @Override
+  public void publish(String channelName, JavaScriptObject message, WidgetProxy dest) {
+    publish (channelName, SaveableText.stringify(message), dest);
+  }
+
+  @Override
   public void publish(String channelName, String message, WidgetProxy dest) {
     String destWidgetId = null;
     if (dest != null) {

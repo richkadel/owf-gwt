@@ -1,0 +1,4 @@
+The path "undefined./resources/blank.html" is used by dojo, which is 
+embedded in OZONE Widget Framework's bundled script. Dojo can't find 
+dojo.js and fails to find this blank.html if not located precisely 
+at this path. This prevents a 404 error from showing up in the console.

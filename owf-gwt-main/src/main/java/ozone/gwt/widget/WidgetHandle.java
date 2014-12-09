@@ -36,13 +36,15 @@ public interface WidgetHandle {
   public void registerWidgetProxyFunctions(
       WidgetProxyFunctions widgetProxyFunctions);
 
-  public abstract void publish(String channelName, String message,
+  public void publish(String channelName, String message,
       WidgetProxy dest);
 
-  public abstract void subscribe(String channelName,
+  public void publish(String channelName, JavaScriptObject message, WidgetProxy dest);
+
+  public void subscribe(String channelName,
       EventListener<StringMessage> handler);
 
-  public abstract void unsubscribe(String channelName);
+  public void unsubscribe(String channelName);
 
   public void startActivity(Intent<?> activity, JavaScriptObject data,
       OnReceipt onReceipt);

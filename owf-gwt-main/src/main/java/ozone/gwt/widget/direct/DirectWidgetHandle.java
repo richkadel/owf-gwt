@@ -17,6 +17,7 @@ import ozone.gwt.widget.WidgetHandle;
 import ozone.gwt.widget.WidgetProxy;
 import ozone.gwt.widget.WidgetProxyFunction;
 import ozone.gwt.widget.WidgetProxyFunctions;
+import ozone.gwt.widget.direct.descriptorutil.SaveableText;
 import jsfunction.gwt.functions.EventListener;
 import jsfunction.gwt.functions.NoArgsFunction;
 import jsfunction.gwt.returns.JsReturn;
@@ -195,6 +196,11 @@ public class DirectWidgetHandle implements WidgetHandle, WidgetProxy {
   @Override
   public boolean isSameWidget(WidgetProxy rhs) {
     return this == rhs;
+  }
+
+  @Override
+  public void publish(String channelName, JavaScriptObject message, WidgetProxy dest) {
+    publish (channelName, SaveableText.stringify(message), dest);
   }
 
   @Override

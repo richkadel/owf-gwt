@@ -47,7 +47,7 @@ public class DirectWidgetHandle implements WidgetHandle, WidgetProxy {
   
   private List<Intent<?>> intentsAdded = new LinkedList<Intent<?>>();
   private List<EventingChannel> channelsAdded = new LinkedList<EventingChannel>();
-  private boolean autoNotifyWidgetReady;
+  private boolean autoNotifyWidgetReady = true;
   private boolean notifiedWidgetReady;
   
   private List<EventListener<WidgetProxy>> readyCallbacks;
@@ -278,12 +278,18 @@ public class DirectWidgetHandle implements WidgetHandle, WidgetProxy {
 
   private class PendingIntent {
 
+    private DirectWidgetHandle sender;
     private JavaScriptObject data;
     private OnReceipt onReceipt;
 
-    PendingIntent(JavaScriptObject data, OnReceipt onReceipt) {
+    PendingIntent(DirectWidgetHandle sender, JavaScriptObject data, OnReceipt onReceipt) {
+      this.sender = sender;
       this.data = data;
       this.onReceipt = onReceipt;
+    }
+
+    public DirectWidgetHandle getSender() {
+      return sender;
     }
 
     public JavaScriptObject getData() {
@@ -304,7 +310,7 @@ public class DirectWidgetHandle implements WidgetHandle, WidgetProxy {
       sendIntent(intentHandler.getRecipient(), intentHandler.getIntent(), data,
           onReceipt);
     } else {
-      pendingIntents.put(intent, new PendingIntent(data, onReceipt));
+      pendingIntents.put(intent, new PendingIntent(this, data, onReceipt));
     }
   }
 
@@ -328,7 +334,7 @@ public class DirectWidgetHandle implements WidgetHandle, WidgetProxy {
     intentHandlers.put(intent, new IntentHandler(intent));
     PendingIntent pendingIntent = pendingIntents.remove(intent);
     if (pendingIntent != null) {
-      sendIntent(this, intent, pendingIntent.getData(),
+      pendingIntent.getSender().sendIntent(this, intent, pendingIntent.getData(),
           pendingIntent.getOnReceipt());
     }
   }

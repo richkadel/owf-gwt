@@ -17,8 +17,12 @@ import ozone.gwt.widget.WidgetProxyFunctions;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.JsArrayMixed;
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Tree;
@@ -27,6 +31,7 @@ import com.google.gwt.user.client.ui.TreeItem;
 public class DocumentTree extends ScrollPanel implements EntryPoint {
   
   private WidgetHandle widgetHandle;
+  private TreeItem root;
 
   public DocumentTree() {
     widgetHandle = WidgetFramework.createWidgetHandle(null, this);
@@ -35,7 +40,7 @@ public class DocumentTree extends ScrollPanel implements EntryPoint {
   @Override
   public void onLoad() {
     
-    TreeItem root = new TreeItem();
+    root = new TreeItem();
     root.setText("root");
     root.addTextItem("item0");
     root.addTextItem("item1");
@@ -50,19 +55,7 @@ public class DocumentTree extends ScrollPanel implements EntryPoint {
     
     tree.addSelectionHandler(new SelectionHandler<TreeItem>() {
       public void onSelection(SelectionEvent<TreeItem> selected) {
-        ShowTable.startActivity(
-          widgetHandle, 
 //TODO
-          TableData.create("arg1", selected.getSelectedItem().getText()),
-          new OnReceipt() {
-            public void intentReceived(WidgetProxy dest) {
-//TODO
-            }
-            public void intentNotReceived() {
-              GWT.log("ShowTable intent was not received");
-            }
-          }
-        );
       }
     });
     
@@ -81,29 +74,61 @@ public class DocumentTree extends ScrollPanel implements EntryPoint {
           }
         });
 
-    wpf.add(DocumentTreeProxy.SET_SATURATION, new VarArgsFunction() {
+    wpf.add(DocumentTreeProxy.ADD_FILES, new VarArgsFunction() {
       public void callback(JsArrayMixed args) {
-        double saturation = args.getNumber(0);
-//TODO
+        int numFiles = (int) args.getNumber(0);
+        int count = root.getChildCount();
+        for (int i = 0; i < numFiles; i++) {
+          root.addTextItem("item"+(count++));
+        }
       }
     });
-
-    wpf.add(DocumentTreeProxy.SET_BRIGHTNESS, new VarArgsFunction() {
-      public void callback(JsArrayMixed args) {
-        double brightness = args.getNumber(0);
+    
+    ShowTable.startActivity(
+      widgetHandle, 
 //TODO
+      TableData.create("arg1", "arg2"),
+      new OnReceipt() {
+        public void intentReceived(WidgetProxy dest) {
+//TODO
+          new Info("Got intent message")
+            .show();
+        }
+        public void intentNotReceived() {
+          GWT.log("ShowTable intent was not received");
+        }
       }
-    });
+    );
     
 //TODO
     new DocumentTreeInitializationChannel(widgetHandle) {
       protected void messageReceived(WidgetProxy sender,
           DocumentTreeInitializationData message) {
         GWT.log("Got DocumentTreeInitializationChannel message: "+message.getPublisherMessage());
+        new Info("Got DocumentTreeInitializationChannel message: "+message.getPublisherMessage())
+          .show();
       }
-    };
+    }
+    .subscribe(); // subscribe now... don't wait for auto-subscribe, since publish may happen before I get there
 
     widgetHandle.registerWidgetProxyFunctions(wpf);
+  }
+  
+  private static class Info extends DialogBox {
+
+    public Info(String text) {
+      setText(text);
+      setAnimationEnabled(true);
+      setGlassEnabled(true);
+
+      Button ok = new Button("OK");
+      ok.addClickHandler(new ClickHandler() {
+        public void onClick(ClickEvent event) {
+          hide();
+        }
+      });
+      setWidget(ok);
+    }
   }
 
   @Override

@@ -107,11 +107,6 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
     return $wnd[globalVarName];
   }-*/;
 
-//  @Override
-//  public void addSaveWidgetCallback(NoArgsFunction callback) {
-//    addWidgetHeaderButton("save", callback);
-//  }
-  
   @Override
   public boolean hasWidgetHeader() {
     return true;
@@ -487,9 +482,9 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
               } else {
                 for (int i = 0; i < len; i++) {
                   // These should already be "ready" proxies
-                  if (!OWFWidgetProxy.isReady(dests.get(i))) {
-                    throw new Error("Given WidgetProxy is not ready! It should be. Wrap in OWFWidgetProxy.getWidgetProxy() callback method before returning.");
-                  }
+//                  if (!OWFWidgetProxy.isReady(dests.get(i))) {
+//                    throw new Error("Given WidgetProxy is not ready! It should be. Wrap in OWFWidgetProxy.getWidgetProxy() callback method before returning.");
+//                  }
                   onReceipt.intentReceived(dests.get(i));
                 }
               }
@@ -670,9 +665,9 @@ public class OZONEWidgetFramework extends WidgetFramework implements WidgetHandl
           @Override
           public void callback(IntentReceived event) {
             // sender should already be a "ready" proxy
-            if (!OWFWidgetProxy.isReady(event.getSender())) {
-              throw new Error("Given WidgetProxy is not ready! It should be. Wrap in OWFWidgetProxy.getWidgetProxy() callback method before returning.");
-            }
+//            if (!OWFWidgetProxy.isReady(event.getSender())) {
+//              throw new Error("Given WidgetProxy is not ready! It should be. Wrap in OWFWidgetProxy.getWidgetProxy() callback method before returning.");
+//            }
             intent.coercedIntentReceived(event.getSender(), event.getData());
           }
         })

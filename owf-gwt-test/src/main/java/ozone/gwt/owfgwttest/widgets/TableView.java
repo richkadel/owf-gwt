@@ -52,7 +52,7 @@ public class TableView extends ScrollPanel implements IsWidget, EntryPoint {
       public void onClick(ClickEvent arg0) {
 //TODO
         if (documentTreeProxy != null) {
-          documentTreeProxy.setBrightness(2.0);
+          documentTreeProxy.addFiles(3);
         }
       }
     });

@@ -7,8 +7,7 @@ import ozone.gwt.widget.WidgetProxy;
 public class DocumentTreeProxy {
   
   public static final String GET_SETTINGS = "getSettings";
-  public static final String SET_SATURATION = "setSaturation";
-  public static final String SET_BRIGHTNESS = "setBrightness";
+  public static final String ADD_FILES = "addFiles";
   
   private WidgetProxy widgetProxy;
 
@@ -24,11 +23,7 @@ public class DocumentTreeProxy {
     widgetProxy.call(GET_SETTINGS, callback);
   }
 
-  public void setSaturation(double saturation) {
-    widgetProxy.call(SET_SATURATION, saturation);
-  }
-
-  public void setBrightness(double brightness) {
-    widgetProxy.call(SET_BRIGHTNESS, brightness);
+  public void addFiles(int numFiles) {
+    widgetProxy.call(ADD_FILES, numFiles);
   }
 }

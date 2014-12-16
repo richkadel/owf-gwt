@@ -10,16 +10,19 @@
     <jsFunctionGwtVersion>1.0.1-SNAPSHOT</jsFunctionGwtVersion>
     -->
     <jsFunctionGwtVersion>1.0</jsFunctionGwtVersion>
+    <owfGwtVersion>0.1.0</owfGwtVersion>
     <!--
-    <owfGwtVersion>0.0.1</owfGwtVersion>
+    <owfGwtVersion>0.1.1-SNAPSHOT</owfGwtVersion>
     -->
-    <owfGwtVersion>0.0.1-SNAPSHOT</owfGwtVersion>
   </properties>
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>owf</groupId>
   <artifactId>owf-gwt</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.1.0</version>
+  <!--
+  <version>0.1.1-SNAPSHOT</version>
+  -->
   <packaging>pom</packaging>
 
   <modules>

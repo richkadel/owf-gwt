@@ -43,11 +43,11 @@ in `Dock.java`, with matching GWT module descriptor `owfgwttest.gwt.xml`)
 as well as work as individual, independent widgets in an OWF
 framework.
 
-Browse `[Dock.java](https://github.com/richkadel/owf-gwt/blob/master/owf-gwt-test/src/main/java/ozone/gwt/owfgwttest/directcontainers/Dock.java)`
+Browse [Dock.java](https://github.com/richkadel/owf-gwt/blob/master/owf-gwt-test/src/main/java/ozone/gwt/owfgwttest/directcontainers/Dock.java)
 along with
-`[FormTabs.java](https://github.com/richkadel/owf-gwt/blob/master/owf-gwt-test/src/main/java/ozone/gwt/owfgwttest/directcontainers/FormTabs.java)`
+[FormTabs.java](https://github.com/richkadel/owf-gwt/blob/master/owf-gwt-test/src/main/java/ozone/gwt/owfgwttest/directcontainers/FormTabs.java)
 and
-`[ViewTabs.java](https://github.com/richkadel/owf-gwt/blob/master/owf-gwt-test/src/main/java/ozone/gwt/owfgwttest/directcontainers/ViewTabs.java)`
+[ViewTabs.java](https://github.com/richkadel/owf-gwt/blob/master/owf-gwt-test/src/main/java/ozone/gwt/owfgwttest/directcontainers/ViewTabs.java)
 to see how the individual widgets are loaded directly into a standalone
 GWT app.
 
